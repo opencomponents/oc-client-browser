@@ -25,15 +25,12 @@
     "index.js"
   ],
   "scripts": {
-    "test": "grunt",
+    "test": "grunt test",
     "build": "grunt build"
   },
   "devDependencies": {
-     "async": "2.4.1",
     "grunt": "^1.0.1",
-    "grunt-git": "^1.0.0",
     "grunt-karma": "^2.0.0",
-    "grunt-mocha-test": "^0.12.7",
     "fs-extra": "^3.0.1",
     "stringformat": "0.0.5",
     "uglify-js": "2.6.4",
@@ -44,11 +41,8 @@
     "karma-sauce-launcher": "^1.0.0",
     "karma-sinon": "^1.0.5",
     "load-grunt-tasks": "^3.5.2",
-    "mocha": "^3.0.2",
     "phantomjs-prebuilt": "^2.1.12",
     "sinon": "^1.17.5",
-    "semver-sort": "0.0.4",
-    "lodash": "^4.17.4",
-    "semver": "5.3.0"
+    "lodash": "^4.17.4"
   }
 }
