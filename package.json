@@ -2,7 +2,7 @@
   "name": "oc-client-browser",
   "version": "1.0.0",
   "description": "OC browser client",
-  "main": "dist/oc-client.min.js",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/opencomponents/oc-client-browser.git"
@@ -21,7 +21,8 @@
   },
   "license": "MIT",
   "files": [
-    "dist"
+    "dist",
+    "index.js"
   ],
   "scripts": {
     "test": "grunt test",
