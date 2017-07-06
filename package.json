@@ -1,0 +1,48 @@
+{
+  "name": "oc-client-browser",
+  "version": "1.0.0",
+  "description": "OC browser client",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opencomponents/oc-client-browser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/opencomponents/oc-client-browser/issues"
+  },
+  "homepage": "https://github.com/opencomponents/oc-client-browser#readme",
+  "keywords": [
+    "oc",
+    "opencomponents"
+  ],
+  "author": {
+    "name": "Nick Balestra",
+    "email": "nick@balestra.ch"
+  },
+  "license": "MIT",
+  "files": [
+    "dist",
+    "index.js"
+  ],
+  "scripts": {
+    "test": "grunt test",
+    "build": "grunt build"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-karma": "^2.0.0",
+    "fs-extra": "^3.0.1",
+    "stringformat": "0.0.5",
+    "uglify-js": "2.6.4",
+    "jasmine-core": "^2.5.1",
+    "karma": "^1.3.0",
+    "karma-jasmine": "^1.0.2",
+    "karma-phantomjs-launcher": "^1.0.2",
+    "karma-sauce-launcher": "^1.0.0",
+    "karma-sinon": "^1.0.5",
+    "load-grunt-tasks": "^3.5.2",
+    "phantomjs-prebuilt": "^2.1.12",
+    "sinon": "^1.17.5",
+    "lodash": "^4.17.4"
+  }
+}
