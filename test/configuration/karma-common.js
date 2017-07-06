@@ -15,11 +15,11 @@ module.exports = {
     'test-settings.js',
 
     // The oc-client bundle
-    '../../src/components/oc-client/src/l.js',
-    '../../src/components/oc-client/src/oc-client.js',
+    '../../src/l.js',
+    '../../src/oc-client.js',
 
     // The tests
-    '../front-end/*.js'
+    '../*.js'
   ],
   port: 9876,
   singleRun: false
