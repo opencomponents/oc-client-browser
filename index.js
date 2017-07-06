@@ -1,2 +1,2 @@
 const fs = require('fs');
-module.exports = fs.readFileSync('./dist/oc-client.min.js', 'utf8');
+module.exports = cb => fs.readFile('./dist/oc-client.min.js', 'utf8', cb);
