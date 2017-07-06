@@ -1,0 +1,26 @@
+{
+  "name": "oc-client-browser",
+  "version": "1.0.0",
+  "description": "OC browser client",
+  "main": "dist/oc-client.min.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opencomponents/oc-client-browser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/opencomponents/oc-client-browser/issues"
+  },
+  "homepage": "https://github.com/opencomponents/oc-client-browser#readme",
+  "keywords": [
+    "oc",
+    "opencomponents"
+  ],
+  "author": {
+    "name": "Nick Balestra",
+    "email": "nick@balestra.ch"
+  },
+  "license": "MIT",
+  "files": [
+    "dist"
+  ]
+}
