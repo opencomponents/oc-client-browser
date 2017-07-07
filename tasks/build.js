@@ -15,6 +15,7 @@ module.exports = function(grunt) {
       const done = this.async(),
         version = packageJson.version,
         srcPath = '../src/',
+        vendorPath = '../vendor/',
         distPath = '../dist/',
         licenseRow =
           '/*! OpenComponents client v{0} | (c) 2015-{1} OpenTable, Inc. | {2} */',
@@ -27,12 +28,10 @@ module.exports = function(grunt) {
           licenseLink
         ),
         l = fs
-          .readFileSync(path.join(__dirname, srcPath, 'l.js'))
+          .readFileSync(path.join(__dirname, vendorPath, 'l.js'))
           .toString(),
         ocClient = fs
-          .readFileSync(
-            path.join(__dirname, srcPath, 'oc-client.js')
-          )
+          .readFileSync(path.join(__dirname, srcPath, 'oc-client.js'))
           .toString(),
         bundle = format(
           "{0}\n;\n{1}\n;\noc.clientVersion='{2}';",
@@ -40,15 +39,6 @@ module.exports = function(grunt) {
           ocClient,
           version
         );
-        // ocClientPackageInfo = require(srcPath + 'package.json'),
-        // jsonConfig = { spaces: 2 };
-
-      // ocClientPackageInfo.version = version;
-      // fs.writeJsonSync(
-      //   path.join(__dirname, srcPath, 'package.json'),
-      //   ocClientPackageInfo,
-      //   jsonConfig
-      // );
 
       const compressed = uglifyJs.minify(bundle, {
         fromString: true,
@@ -57,10 +47,6 @@ module.exports = function(grunt) {
 
       const compressedCode = format('{0}\n{1}', license, compressed.code);
 
-      // fs.writeFileSync(
-      //   path.join(__dirname, clientComponentDir, 'src/oc-client.min.js'),
-      //   compressedCode
-      // );
       fs.ensureDirSync(distPath);
       fs.writeFileSync(
         path.join(__dirname, distPath, 'oc-client.min.map'),
@@ -72,19 +58,6 @@ module.exports = function(grunt) {
       );
 
       done();
-      // const Local = require('../src/cli/domain/local'),
-      //   local = new Local(),
-      //   packageOptions = {
-      //     componentPath: path.join(__dirname, clientComponentDir),
-      //     verbose: false
-      //   };
-
-      // local.package(packageOptions, err => {
-      //   grunt.log[err ? 'error' : 'ok'](
-      //     err ? err : 'Client has been built and packaged'
-      //   );
-      //   done();
-      // });
     }
   );
 };
