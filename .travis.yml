@@ -1,19 +1,15 @@
 language: node_js
-
 matrix:
   include:
-    - node_js: "6"
-
+  - node_js: '6'
 before_script:
 - npm install -g grunt-cli
-
 script:
-  - grunt sauce
-
+- grunt sauce
 notifications:
   email: false
-
 env:
   global:
   - secure: OUooygPgokU2pa5FmVKb5tEQ+NjrUS7vr2al2MYqQDi7VOViOkKiP+1TMKDaPEo3+H3BQlsRd/HxItSCucg5Wy+45pMsTnYgR0Lsp2zmcuHmY67EPOM3B6bdCyPtB5VokrpO3O+uBTtMPAKS/sQq62gKV5Xq/K1t5CQ31EgfCd4=
   - secure: P/+5dvk3zwkDnUmNCEX8fgNkLAQ5s6j+dR4h3Zn5UJBBUKSZaz1QbfEX+uZ5Rn4l4aRGdvG2PGStySiS/MHmPKhWJfMMEkSFjERLUF07U2gLSkn1UOQeh0zBWIb5TehwIuuTNPmOoSE/7xgmXwF83Dq8ALjDCmo6VrtoZes9E2g=
+  - secure: kkMxwTHQjCg2fWVrFxRbSZbNb/Ss6vciFlfe61GH2RLIsc96/mSCCguqMsCyFcKd0Kw+qS8L4NlybbdYCljwhcgpW7PL60+7uqL1U+3nr15o/5b28fY3rCfubJf8S9llRQ3kzq779bgT9c/AWQw0WWl0BpfAn8HiSevbnt+4ZaZjnwpig4irOXyj4VuVUO4rfKO2MUSe2EB5fbp+ASGV6XelChRPZtNBdITPL2oU2p1HYkqrytYizYuITNQJLRqAROHy5aPExhZOC94G2MLNT8AC8kk6TSBIpJGudTFCCWhmeHPtxGt4cU5O/Y7/13CsfNbqvWKnqv5HWbaDUnrB/Xf0fkoB9aUprl396ux1t7S3+0P6DC74EXQV1qA1TlSdcJ5vojFyxemcDAQHTVTm6Hetpstqk3PGIdf48/FwDst5K0isYo9X4E7w4/P9JHxZ8hJ6gIlAG7h35gzhb9W5GXgjB4nyzIgVYFs1lcCY6yeNMho7mUdVbAP596wQ8PWIDZ16aSLPBvYRBVxSltDMqPVWd/DijMr8YmYtMojLits4Y9X62tX6F6hetUTx07voTskIoim9RqrG9eUX4XU88NR/tjsK01WVlHEsOH/I0QbyH668gFdanvLiS/RI9CJme+YUpKcuGkoLKkH0HrhcJs58RuGeFTTJgDMSnygiPg8=
