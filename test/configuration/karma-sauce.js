@@ -11,7 +11,7 @@ module.exports = function(config) {
     singleRun: true,
 
     sauceLabs: {
-      testName: 'oc-client-browser',
+      testName: 'oc-client-browser tests',
       build: 'local',
       startConnect: true
     },

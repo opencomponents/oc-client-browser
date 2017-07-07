@@ -15,6 +15,7 @@ module.exports = function(grunt) {
       const done = this.async(),
         version = packageJson.version,
         srcPath = '../src/',
+        vendorPath = '../vendor/',
         distPath = '../dist/',
         licenseRow =
           '/*! OpenComponents client v{0} | (c) 2015-{1} OpenTable, Inc. | {2} */',
@@ -26,7 +27,9 @@ module.exports = function(grunt) {
           new Date().getFullYear(),
           licenseLink
         ),
-        l = fs.readFileSync(path.join(__dirname, srcPath, 'l.js')).toString(),
+        l = fs
+          .readFileSync(path.join(__dirname, vendorPath, 'l.js'))
+          .toString(),
         ocClient = fs
           .readFileSync(path.join(__dirname, srcPath, 'oc-client.js'))
           .toString(),
