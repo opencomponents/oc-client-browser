@@ -35,11 +35,11 @@
       "prettier-eslint --write",
       "git add"
     ],
-    "tasks/**/*.js": [
+    "tasks/*.js": [
       "prettier-eslint --write",
       "git add"
     ],
-    "test/**/*.js": [
+    "test/*.js": [
       "prettier-eslint --write",
       "git add"
     ]
