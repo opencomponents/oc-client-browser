@@ -3,19 +3,19 @@
 const _ = require('lodash');
 
 const customLaunchers = {
-  'chrome': {
+  chrome: {
     base: 'SauceLabs',
     browserName: 'chrome',
     platform: 'Linux',
     version: '48'
   },
-  'ff': {
+  ff: {
     base: 'SauceLabs',
     browserName: 'firefox',
     platform: 'Linux',
     version: '45'
   },
-  'android': {
+  android: {
     base: 'SauceLabs',
     browserName: 'android',
     platform: 'Linux',
@@ -23,37 +23,37 @@ const customLaunchers = {
     deviceName: 'Android Emulator',
     'device-orientation': 'portrait'
   },
-  'edge14': {
+  edge14: {
     base: 'SauceLabs',
     browserName: 'MicrosoftEdge',
     platform: 'Windows 10',
     version: '14'
   },
-  'ie11': {
+  ie11: {
     base: 'SauceLabs',
     browserName: 'internet explorer',
     platform: 'Windows 10',
     version: '11'
   },
-  'ie10': {
+  ie10: {
     base: 'SauceLabs',
     browserName: 'internet explorer',
     platform: 'Windows 8',
     version: '10'
   },
-  'ie9': {
+  ie9: {
     base: 'SauceLabs',
     browserName: 'internet explorer',
     platform: 'Windows 7',
     version: '9'
   },
-  'safari': {
+  safari: {
     base: 'SauceLabs',
     browserName: 'Safari',
     platform: 'OS X 10.10',
     version: '8'
   },
-  'ipad': {
+  ipad: {
     base: 'SauceLabs',
     browserName: 'Safari',
     deviceName: 'iPad Simulator',
@@ -61,7 +61,7 @@ const customLaunchers = {
     version: '9.3',
     'device-orientation': 'portrait'
   },
-  'iphone': {
+  iphone: {
     base: 'SauceLabs',
     browserName: 'Safari',
     deviceName: 'iPhone Simulator',
