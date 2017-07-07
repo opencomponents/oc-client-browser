@@ -493,8 +493,8 @@ var oc = oc || {};
 
               if (apiResponse.html.indexOf('<' + OC_TAG) === 0) {
                 var innerHtmlPlusEnding = apiResponse.html.slice(
-                  apiResponse.html.indexOf('>') + 1
-                ),
+                    apiResponse.html.indexOf('>') + 1
+                  ),
                   innerHtml = innerHtmlPlusEnding.slice(
                     0,
                     innerHtmlPlusEnding.lastIndexOf('<')
