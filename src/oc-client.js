@@ -36,7 +36,7 @@ var oc = oc || {};
     oc.status = 'loading';
   }
 
-  // varants
+  // constants
   var CDNJS_BASEURL = 'https://cdnjs.cloudflare.com/ajax/libs/',
     IE9_AJAX_POLYFILL_URL =
       CDNJS_BASEURL +
