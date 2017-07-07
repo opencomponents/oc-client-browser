@@ -28,9 +28,12 @@
     "saucelabs": "grunt sauce",
     "test": "grunt test",
     "build": "grunt build",
-    "precommit": "lint-staged"
+    "precommit": "npm run build && lint-staged"
   },
   "lint-staged": {
+    "dist/**/*": [
+      "git add"
+    ],
     "src/**/*.js": [
       "prettier-eslint --write",
       "git add"
