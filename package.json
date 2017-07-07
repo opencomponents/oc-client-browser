@@ -28,7 +28,8 @@
     "saucelabs": "grunt sauce",
     "test": "grunt test",
     "build": "grunt build",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "prepublish": "npm run test && npm run build"
   },
   "lint-staged": {
     "src/**/*.js": [
