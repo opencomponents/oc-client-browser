@@ -1,3 +1,8 @@
 # oc-client-browser
 
-OC browser client
+The [OpenComponents](https://github.com/opentable/oc) browser client.
+
+### [Documentation](https://github.com/opentable/oc/wiki/Browser-client)
+
+### License
+MIT

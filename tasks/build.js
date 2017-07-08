@@ -1,6 +1,5 @@
 'use strict';
 
-const format = require('stringformat');
 const fs = require('fs-extra');
 const path = require('path');
 const uglifyJs = require('uglify-js');
@@ -17,35 +16,23 @@ module.exports = function(grunt) {
         srcPath = '../src/',
         vendorPath = '../vendor/',
         distPath = '../dist/',
-        licenseRow =
-          '/*! OpenComponents client v{0} | (c) 2015-{1} OpenTable, Inc. | {2} */',
         licenseLink =
           'https://github.com/opencomponents/oc-client-browser/tree/master/dist/LICENSES',
-        license = format(
-          licenseRow,
-          version,
-          new Date().getFullYear(),
-          licenseLink
-        ),
+        license = `/*! OpenComponents client v${version} | (c) 2015-${new Date().getFullYear()} OpenTable, Inc. | ${licenseLink} */`,
         l = fs
           .readFileSync(path.join(__dirname, vendorPath, 'l.js'))
           .toString(),
         ocClient = fs
           .readFileSync(path.join(__dirname, srcPath, 'oc-client.js'))
           .toString(),
-        bundle = format(
-          "{0}\n;\n{1}\n;\noc.clientVersion='{2}';",
-          l,
-          ocClient,
-          version
-        );
+        bundle = `${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
 
       const compressed = uglifyJs.minify(bundle, {
         fromString: true,
         outSourceMap: 'oc-client.min.map'
       });
 
-      const compressedCode = format('{0}\n{1}', license, compressed.code);
+      const compressedCode = `${license}\n${compressed.code}`;
 
       fs.ensureDirSync(distPath);
       fs.writeFileSync(
