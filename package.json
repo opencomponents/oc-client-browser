@@ -1,6 +1,6 @@
 {
   "name": "oc-client-browser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "OC browser client",
   "main": "index.js",
   "repository": {
@@ -29,7 +29,7 @@
     "test": "grunt test",
     "build": "grunt build",
     "precommit": "lint-staged",
-    "prepublish": "npm run test && npm run build"
+    "prepublish": "npm run build"
   },
   "lint-staged": {
     "src/**/*.js": [
