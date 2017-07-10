@@ -1,8 +1,24 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports = cb => fs.readFile(
-  path.join(__dirname, 'dist/oc-client.min.js'),
-  'utf8',
-  cb
-);
+const distPath = 'dist';
+const clientLibFileName = 'oc-client.min.js';
+const clientMapFileName = 'oc-client.min.map';
+
+
+module.exports = {
+  getLib(cb){
+    return fs.readFile(
+      path.join(__dirname, distPath, clientLibFileName),
+      'utf8',
+      cb
+    );
+  },
+  getMap(cb){
+    return fs.readFile(
+      path.join(__dirname, distPath, clientMapFileName),
+      'utf8',
+      cb
+    );
+  }
+};
