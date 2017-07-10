@@ -17,7 +17,7 @@ module.exports = function(grunt) {
         vendorPath = '../vendor/',
         distPath = '../dist/',
         licenseLink =
-          'https://github.com/opencomponents/oc-client-browser/tree/master/dist/LICENSES',
+          'https://github.com/opencomponents/oc-client-browser/tree/master/LICENSES',
         license = `/*! OpenComponents client v${version} | (c) 2015-${new Date().getFullYear()} OpenTable, Inc. | ${licenseLink} */`,
         l = fs
           .readFileSync(path.join(__dirname, vendorPath, 'l.js'))
@@ -34,7 +34,7 @@ module.exports = function(grunt) {
 
       const compressedCode = `${license}\n${compressed.code}`;
 
-      fs.ensureDirSync(distPath);
+      fs.ensureDirSync(path.join(__dirname, distPath));
       fs.writeFileSync(
         path.join(__dirname, distPath, 'oc-client.min.map'),
         compressed.map
