@@ -328,22 +328,19 @@ var oc = oc || {};
         };
       };
 
-      var wasJqueryThereAlready = !!$window.jQuery || !!$window.$;
+      var wasJqueryThereAlready = !!$window.jQuery;
+      var wasDollarThereAlready = !!$window.$;
 
-      if (wasJqueryThereAlready) {
-        var instanceOfJquery = $window.jQuery || $window.$;
-        requirePolyfills(instanceOfJquery, function() {
-          oc.$ = instanceOfJquery;
+      oc.require('jQuery', JQUERY_URL, function(jQuery) {
+        requirePolyfills(jQuery, function() {
+          if (wasJqueryThereAlready || wasDollarThereAlready) {
+            oc.$ = jQuery;
+          } else {
+            oc.$ = jQuery.noConflict();
+          }
           done();
         });
-      } else {
-        oc.require('jQuery', JQUERY_URL, function(jQuery) {
-          requirePolyfills(jQuery, function() {
-            oc.$ = jQuery.noConflict();
-            done();
-          });
-        });
-      }
+      });
     }
   };
 
