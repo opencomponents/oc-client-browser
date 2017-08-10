@@ -328,18 +328,16 @@ var oc = oc || {};
         };
       };
 
+      var wasJqueryThereAlready = !!$window.jQuery;
       var wasDollarThereAlready = !!$window.$;
+
       oc.require('jQuery', JQUERY_URL, function(jQuery) {
         requirePolyfills(jQuery, function() {
-          if (wasDollarThereAlready) {
-            // jQuery was already there. The client shares the same instance.
+          if (wasJqueryThereAlready || wasDollarThereAlready) {
             oc.$ = jQuery;
           } else {
-            // jQuery wasn't there. The client dynamically downloads it and
-            // it tries to avoid sharing it by freeing the $ symbol.
             oc.$ = jQuery.noConflict();
           }
-
           done();
         });
       });
