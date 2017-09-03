@@ -214,6 +214,25 @@ var oc = oc || {};
     }
   };
 
+  var asyncRequireForEach = function(toLoad, loaded, callback) {
+    if (typeof loaded === 'function') {
+      callback = loaded;
+      loaded = [];
+    }
+
+    if (toLoad.length === 0) {
+      return callback();
+    }
+
+    var loading = toLoad[0];
+    oc.require(loading.global, loading.url, function() {
+      var justLoaded = loading;
+      var nowLoaded = loaded.concat(justLoaded);
+      var remainToLoad = toLoad.slice(1);
+      asyncRequireForEach(remainToLoad, nowLoaded, callback);
+    });
+  };
+
   var processHtml = function($component, data, callback) {
     data.id = Math.floor(Math.random() * 9999999999);
 
@@ -368,28 +387,17 @@ var oc = oc || {};
                 )
               );
             } else {
-              var externals = template.externals;
-              var externalsRequired = 0;
-
-              externals.forEach(function(library, _index, externals) {
-                oc.require(library.global, library.url, function() {
-                  externalsRequired++;
-                  if (externalsRequired === externals.length) {
-                    if (type === 'oc-template-handlebars') {
-                      try {
-                        var linked = $window.Handlebars.template(
-                          compiledView,
-                          []
-                        );
-                        callback(null, linked(model));
-                      } catch (e) {
-                        callback(e.toString());
-                      }
-                    } else {
-                      callback(null, compiledView(model));
-                    }
+              asyncRequireForEach(template.externals, function() {
+                if (type === 'oc-template-handlebars') {
+                  try {
+                    var linked = $window.Handlebars.template(compiledView, []);
+                    callback(null, linked(model));
+                  } catch (e) {
+                    callback(e.toString());
                   }
-                });
+                } else {
+                  callback(null, compiledView(model));
+                }
               });
             }
           }
