@@ -267,13 +267,15 @@ describe('oc-client : render', function() {
 
   describe('when adding support to new template', function() {
     describe('and the new template client-dependency is not loaded', function() {
-      var originalEmoji, jEmoji, originalLjsLoad, callback, headSpy;
+      var originalEmoji, jEmoji, originalLjsLoad, callback, headSpy, cbSpy;
       beforeEach(function() {
         originalLjsLoad = ljs.load;
         headSpy = sinon.spy();
-
+        cbSpy = sinon.spy();
+        var count = 0;
         ljs.load = function(url, cb) {
-          headSpy(url, cb);
+          headSpy(url, cbSpy);
+          cbSpy(count++);
           cb();
         };
 
@@ -286,6 +288,10 @@ describe('oc-client : render', function() {
             {
               global: 'jEmoji',
               url: 'http://cdn.staticfile.org/emoji/0.2.2/emoji.js'
+            },
+            {
+              global: 'jEmojiDOM',
+              url: 'http://cdn.staticfile.org/emoji/0.2.2/emojiDOM.js'
             }
           ]
         });
@@ -307,9 +313,13 @@ describe('oc-client : render', function() {
       });
 
       it('should require and wait for it', function() {
+        expect(cbSpy.args[0][0]).toBeLessThan(cbSpy.args[1][0]);
         expect(headSpy.called).toBe(true);
         expect(headSpy.args[0][0]).toEqual(
           'http://cdn.staticfile.org/emoji/0.2.2/emoji.js'
+        );
+        expect(headSpy.args[1][0]).toEqual(
+          'http://cdn.staticfile.org/emoji/0.2.2/emojiDOM.js'
         );
       });
 
