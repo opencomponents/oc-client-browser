@@ -233,6 +233,8 @@ var oc = oc || {};
     });
   };
 
+  oc.requireSeries = asyncRequireForEach;
+
   var processHtml = function($component, data, callback) {
     data.id = Math.floor(Math.random() * 9999999999);
 
