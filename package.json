@@ -33,15 +33,15 @@
   },
   "lint-staged": {
     "src/**/*.js": [
-      "prettier-eslint --write",
+      "prettier-eslint --eslint-config-path ./.eslintrc.json --write",
       "git add"
     ],
     "tasks/*.js": [
-      "prettier-eslint --write",
+      "prettier-eslint --eslint-config-path ./.eslintrc.json --write",
       "git add"
     ],
     "test/*.js": [
-      "prettier-eslint --write",
+      "prettier-eslint --eslint-config-path ./.eslintrc.json --write",
       "git add"
     ]
   },
