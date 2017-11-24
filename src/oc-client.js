@@ -47,15 +47,13 @@ var oc = oc || {};
     RETRY_SEND_NUMBER = oc.conf.retrySendNumber || true,
     POLLING_INTERVAL = oc.conf.pollingInterval || 500,
     OC_TAG = oc.conf.tag || 'oc-component',
-    MESSAGES_ERRORS_BASEURL_PARAMETER_IS_REQUIRED =
-      'baseUrl parameter is required',
     MESSAGES_ERRORS_HREF_MISSING = 'Href parameter missing',
-    MESSAGES_ERRORS_NAME_PARAMETER_IS_REQUIRED = 'name parameter is required',
     MESSAGES_ERRORS_RETRY_FAILED = 'Failed to load {0} component {1} times. Giving up'.replace(
       '{1}',
       RETRY_LIMIT
     ),
     MESSAGES_ERRORS_LOADING_COMPILED_VIEW = 'Error getting compiled view: {0}',
+    MESSAGES_ERRORS_GETTING_DATA = 'Error getting data',
     MESSAGES_ERRORS_RENDERING = 'Error rendering component: {0}, error: {1}',
     MESSAGES_ERRORS_RETRIEVING = 'Failed to retrieve the component. Retrying in {0} seconds...'.replace(
       '{0}',
@@ -67,6 +65,12 @@ var oc = oc || {};
     MESSAGES_RENDERED = "Component '{0}' correctly rendered",
     MESSAGES_RETRIEVING =
       'Unrendered component found. Trying to retrieve it...';
+
+  var isRequired = function(name, value) {
+    if (!value) {
+      throw name + ' parameter is required';
+    }
+  };
 
   // The code
   var debug = oc.conf.debug || false,
@@ -257,14 +261,42 @@ var oc = oc || {};
     callback();
   };
 
-  oc.build = function(options) {
-    if (!options.baseUrl) {
-      throw MESSAGES_ERRORS_BASEURL_PARAMETER_IS_REQUIRED;
-    }
+  oc.getData = function(options, cb) {
+    cb = cb || noop;
+    isRequired('version', options.version);
+    isRequired('baseUrl', options.baseUrl);
+    isRequired('name', options.name);
 
-    if (!options.name) {
-      throw MESSAGES_ERRORS_NAME_PARAMETER_IS_REQUIRED;
-    }
+    oc.$.ajax({
+      method: 'POST',
+      url: options.baseUrl,
+      data: {
+        components: [
+          {
+            name: options.name,
+            version: options.version,
+            parameters: options.parameters
+          }
+        ]
+      },
+      headers: { Accept: 'application/vnd.oc.unrendered+json' },
+      contentType: 'text/plain',
+      crossDomain: true,
+      success: function(apiResponse) {
+        if (apiResponse.renderMode === 'rendered') {
+          return cb(MESSAGES_ERRORS_GETTING_DATA);
+        }
+        return cb(null, apiResponse.data, apiResponse);
+      },
+      error: function(err) {
+        return cb(err);
+      }
+    });
+  };
+
+  oc.build = function(options) {
+    isRequired('baseUrl', options.baseUrl);
+    isRequired('name', options.name);
 
     var withFinalSlash = function(s) {
       s = s || '';
@@ -471,7 +503,6 @@ var oc = oc || {};
           headers: { Accept: 'application/vnd.oc.unrendered+json' },
           contentType: 'text/plain',
           crossDomain: true,
-          async: true,
           success: function(apiResponse) {
             if (apiResponse.renderMode === 'unrendered') {
               oc.render(apiResponse.template, apiResponse.data, function(
