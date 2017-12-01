@@ -275,7 +275,11 @@ var oc = oc || {};
           {
             name: options.name,
             version: options.version,
-            parameters: options.parameters
+            parameters: $.extend(
+              {},
+              oc.conf.globalParameters,
+              options.parameters
+            )
           }
         ]
       },
@@ -491,15 +495,14 @@ var oc = oc || {};
 
     oc.ready(function() {
       if (href !== '') {
-        var hrefWithCount = href;
-        if (RETRY_SEND_NUMBER) {
-          hrefWithCount = addParametersToHref(hrefWithCount, {
-            __oc_Retry: retryNumber
-          });
-        }
+        var extraParams = RETRY_SEND_NUMBER ? { __oc_Retry: retryNumber } : {};
+        var finalisedHref = addParametersToHref(
+          href,
+          $.extend({}, oc.conf.globalParameters, extraParams)
+        );
 
         oc.$.ajax({
-          url: hrefWithCount,
+          url: finalisedHref,
           headers: { Accept: 'application/vnd.oc.unrendered+json' },
           contentType: 'text/plain',
           crossDomain: true,

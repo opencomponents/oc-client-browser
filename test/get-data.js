@@ -98,7 +98,7 @@ describe('oc-client : getData', function() {
         );
       });
 
-      it('should call the callback with an error if the registry reponde with a rendered component', function(
+      it('should call the callback with an error if the registry responds with a rendered component', function(
         done
       ) {
         var originalAjax = oc.$.ajax;
@@ -121,6 +121,39 @@ describe('oc-client : getData', function() {
             done();
           }
         );
+      });
+
+      describe('when globalParameters are provided', function() {
+        it('should call the $.ajax method with the global parameters', function(
+          done
+        ) {
+          var spy = sinon.spy(oc.$, 'ajax');
+
+          oc.conf.globalParameters = {
+            test: 'value'
+          };
+
+          execute(
+            {
+              baseUrl: 'http://www.components.com/v2',
+              name: 'myComponent',
+              version: '6.6.6',
+              parameters: {
+                name: 'evil'
+              }
+            },
+            function() {
+              expect(spy.args[0][0].data.components[0].parameters.name).toEqual(
+                'evil'
+              );
+              expect(spy.args[0][0].data.components[0].parameters.test).toEqual(
+                'value'
+              );
+              delete oc.conf.globalParameters;
+              done();
+            }
+          );
+        });
       });
     });
   });
