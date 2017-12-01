@@ -93,6 +93,40 @@ describe('oc-client : renderByHref', function() {
             'application/vnd.oc.unrendered+json'
           );
         });
+
+        it('should make a request to the registry with the proper href', function() {
+          expect(ajaxMock.args[0][0].url).toEqual(
+            'http://my-registry.com/v3/a-component/1.2.X/?name=John&__oc_Retry=0'
+          );
+        });
+      });
+
+      describe('when globalParameters are provided', function() {
+        var callback, ajaxMock;
+        beforeEach(function() {
+          oc.conf.globalParameters = {
+            test: 'hello world & friends?'
+          };
+
+          callback = sinon.spy();
+          ajaxMock = initialise(unRenderedResponse);
+          eval(compiledViewContent);
+          oc.renderByHref(route, callback);
+        });
+
+        afterEach(function() {
+          cleanup();
+          delete oc.conf.globalParameters;
+        });
+
+        it('should make a request to the registry with the proper href', function() {
+          var params = 'test=hello+world+%26+friends%3F';
+          expect(ajaxMock.args[0][0].url).toEqual(
+            'http://my-registry.com/v3/a-component/1.2.X/?name=John&' +
+              params +
+              '&__oc_Retry=0'
+          );
+        });
       });
 
       describe('when the registry responds with unrendered component', function() {
