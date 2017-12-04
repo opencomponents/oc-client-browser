@@ -275,7 +275,7 @@ var oc = oc || {};
           {
             name: options.name,
             version: options.version,
-            parameters: $.extend(
+            parameters: oc.$.extend(
               {},
               oc.conf.globalParameters,
               options.parameters
@@ -498,7 +498,7 @@ var oc = oc || {};
         var extraParams = RETRY_SEND_NUMBER ? { __oc_Retry: retryNumber } : {};
         var finalisedHref = addParametersToHref(
           href,
-          $.extend({}, oc.conf.globalParameters, extraParams)
+          oc.$.extend({}, oc.conf.globalParameters, extraParams)
         );
 
         oc.$.ajax({
