@@ -78,7 +78,9 @@ describe('oc-client : getData', function() {
       it('should call the callback correctly', function(done) {
         var originalAjax = oc.$.ajax;
         oc.$.ajax = function(options) {
-          return options.success({ renderMode: 'unrendered', data: 'hello' });
+          return options.success([
+            { response: { renderMode: 'unrendered', data: 'hello' } }
+          ]);
         };
 
         execute(
@@ -103,7 +105,9 @@ describe('oc-client : getData', function() {
       ) {
         var originalAjax = oc.$.ajax;
         oc.$.ajax = function(options) {
-          return options.success({ renderMode: 'rendered', data: 'hello' });
+          return options.success([
+            { response: { renderMode: 'rendered', data: 'hello' } }
+          ]);
         };
 
         execute(

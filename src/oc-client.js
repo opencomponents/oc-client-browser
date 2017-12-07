@@ -284,13 +284,12 @@ var oc = oc || {};
         ]
       },
       headers: { Accept: 'application/vnd.oc.unrendered+json' },
-      contentType: 'text/plain',
       crossDomain: true,
       success: function(apiResponse) {
-        if (apiResponse.renderMode === 'rendered') {
+        if (apiResponse[0].response.renderMode === 'rendered') {
           return cb(MESSAGES_ERRORS_GETTING_DATA);
         }
-        return cb(null, apiResponse.data, apiResponse);
+        return cb(null, apiResponse[0].response.data, apiResponse[0]);
       },
       error: function(err) {
         return cb(err);
