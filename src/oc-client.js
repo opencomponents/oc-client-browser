@@ -290,9 +290,7 @@ var oc = oc || {};
           return cb(MESSAGES_ERRORS_GETTING_DATA);
         }
         var error = apiResponse[0].response.error
-          ? apiResponse[0].response.details
-            ? apiResponse[0].response.details
-            : apiResponse[0].response.error
+          ? apiResponse[0].response.details || apiResponse[0].response.error
           : null;
         return cb(error, apiResponse[0].response.data, apiResponse[0]);
       },
