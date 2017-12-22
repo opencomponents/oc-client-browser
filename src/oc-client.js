@@ -289,7 +289,12 @@ var oc = oc || {};
         if (apiResponse[0].response.renderMode === 'rendered') {
           return cb(MESSAGES_ERRORS_GETTING_DATA);
         }
-        return cb(null, apiResponse[0].response.data, apiResponse[0]);
+        var error = apiResponse[0].response.error
+          ? apiResponse[0].response.details
+            ? apiResponse[0].response.details
+            : apiResponse[0].response.error
+          : null;
+        return cb(error, apiResponse[0].response.data, apiResponse[0]);
       },
       error: function(err) {
         return cb(err);
