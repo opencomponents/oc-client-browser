@@ -62,7 +62,7 @@
     "lodash": "^4.17.4",
     "phantomjs-prebuilt": "^2.1.12",
     "prettier-eslint-cli": "^4.1.1",
-    "sinon": "^4.0.0",
+    "sinon": "^4.2.2",
     "uglify-js": "2.6.4"
   }
 }
