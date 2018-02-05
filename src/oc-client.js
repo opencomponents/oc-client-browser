@@ -157,6 +157,10 @@ var oc = oc || {};
     return href;
   };
 
+  oc.addStylesToHead = function(styles) {
+    oc.$('<style>' + styles + '</style>').appendTo(document.head);
+  };
+
   oc.registerTemplates = function(templates) {
     registerTemplates(templates);
     oc.ready(oc.renderUnloadedComponents);
