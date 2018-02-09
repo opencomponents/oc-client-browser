@@ -1,0 +1,17 @@
+{
+  "extends": "../.eslintrc.json",
+  "env": {
+    "jasmine": true,
+    "browser": true,
+    "jquery": true
+  },
+  "globals": {
+    "expect": false,
+    "sinon": true,
+    "Handlebars": true,
+    "jade": true
+  },
+  "rules": {
+    "no-console": "off"
+  }
+}
