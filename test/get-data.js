@@ -76,7 +76,6 @@ describe('oc-client : getData', function() {
       });
 
       it('should call the callback correctly', function(done) {
-        var originalAjax = oc.$.ajax;
         oc.$.ajax = function(options) {
           return options.success([
             { response: { renderMode: 'unrendered', data: 'hello' } }
@@ -101,7 +100,6 @@ describe('oc-client : getData', function() {
       });
 
       it('should call the callback with server.js errors details if available', function(done) {
-        var originalAjax = oc.$.ajax;
         oc.$.ajax = function(options) {
           return options.success([
             { response: { error: 'oups', details: 'details about oups' } }
@@ -117,7 +115,7 @@ describe('oc-client : getData', function() {
               name: 'evil'
             }
           },
-          function(err, data) {
+          function(err) {
             expect(err).toEqual('details about oups');
             done();
           }
@@ -125,7 +123,6 @@ describe('oc-client : getData', function() {
       });
 
       it('should call the callback with server.js error if no details are available', function(done) {
-        var originalAjax = oc.$.ajax;
         oc.$.ajax = function(options) {
           return options.success([{ response: { error: 'oups' } }]);
         };
@@ -139,7 +136,7 @@ describe('oc-client : getData', function() {
               name: 'evil'
             }
           },
-          function(err, data) {
+          function(err) {
             expect(err).toEqual('oups');
             done();
           }
@@ -147,7 +144,6 @@ describe('oc-client : getData', function() {
       });
 
       it('should call the callback with an error if the registry responds with a rendered component', function(done) {
-        var originalAjax = oc.$.ajax;
         oc.$.ajax = function(options) {
           return options.success([
             { response: { renderMode: 'rendered', data: 'hello' } }
