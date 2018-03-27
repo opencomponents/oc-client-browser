@@ -409,6 +409,11 @@ var oc = oc || {};
 
   oc.render = function(compiledViewInfo, model, callback) {
     oc.ready(function() {
+      // TODO: integrate with oc-empty-response-handler module
+      if (model && model.__oc_emptyResponse === true) {
+        return callback(null, '');
+      }
+
       var type = compiledViewInfo.type;
       if (type === 'jade') {
         type = 'oc-template-jade';

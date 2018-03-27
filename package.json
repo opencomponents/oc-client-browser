@@ -11,19 +11,13 @@
     "url": "https://github.com/opencomponents/oc-client-browser/issues"
   },
   "homepage": "https://github.com/opencomponents/oc-client-browser#readme",
-  "keywords": [
-    "oc",
-    "opencomponents"
-  ],
+  "keywords": ["oc", "opencomponents"],
   "author": {
     "name": "Nick Balestra",
     "email": "nick@balestra.ch"
   },
   "license": "MIT",
-  "files": [
-    "dist",
-    "index.js"
-  ],
+  "files": ["dist", "index.js"],
   "scripts": {
     "saucelabs": "grunt sauce",
     "test": "grunt test",
@@ -32,18 +26,9 @@
     "prepublish": "npm run build"
   },
   "lint-staged": {
-    "src/**/*.js": [
-      "prettier-eslint --write",
-      "git add"
-    ],
-    "tasks/*.js": [
-      "prettier-eslint --write",
-      "git add"
-    ],
-    "test/*.js": [
-      "prettier-eslint --write",
-      "git add"
-    ]
+    "src/**/*.js": ["prettier-eslint --write", "git add"],
+    "tasks/*.js": ["prettier-eslint --write", "git add"],
+    "test/*.js": ["prettier-eslint --write", "git add"]
   },
   "devDependencies": {
     "fs-extra": "^5.0.0",
