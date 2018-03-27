@@ -122,9 +122,8 @@ describe('oc-client : render', function() {
     });
 
     describe('when rendering an empty component', function() {
-      var callback, headSpy;
+      var callback;
       beforeEach(function() {
-        headSpy = sinon.spy(ljs, 'load');
         callback = sinon.spy();
         eval(handlebarsCompiledView);
         oc.render(
@@ -137,10 +136,6 @@ describe('oc-client : render', function() {
           { __oc_emptyResponse: true },
           callback
         );
-      });
-
-      afterEach(function() {
-        ljs.load.restore();
       });
 
       it('should render the component as empty', function() {
