@@ -69,7 +69,10 @@ describe('oc-client : renderUnloadedComponents', function() {
     ljs.load.restore();
     console.log = originalConsoleLog;
     oc.events.reset();
-    oc.$('body').find('oc-component').remove();
+    oc
+      .$('body')
+      .find('oc-component')
+      .remove();
     oc.$.ajax = originalAjax;
     delete oc.components;
     oc.renderedComponents = {};
@@ -77,7 +80,7 @@ describe('oc-client : renderUnloadedComponents', function() {
 
   describe('when rendering all unloaded components in page', function() {
     describe('when the rendering is done', function() {
-      var calls, eventData;
+      var eventData;
 
       beforeEach(function(done) {
         initialise();

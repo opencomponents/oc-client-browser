@@ -1,6 +1,7 @@
 {
   "env": {
-    "es6": false
+    "es6": true,
+    "node": true
   },
   "extends": "eslint:recommended",
   "rules": {
@@ -12,5 +13,9 @@
     }],
     "semi": ["error", "always"],
     "strict": ["error", "safe"]
+  },
+  "globals": {
+    "oc": true,
+    "ljs": true
   }
 }
