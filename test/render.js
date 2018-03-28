@@ -261,9 +261,8 @@ describe('oc-client : render', function() {
   });
 
   describe('when rendering unsupported component', function() {
-    var callback, headSpy;
+    var callback;
     beforeEach(function() {
-      headSpy = sinon.spy(ljs, 'load');
       callback = sinon.spy();
       eval(jadeCompiledView);
       oc.render(
@@ -277,10 +276,6 @@ describe('oc-client : render', function() {
       );
     });
 
-    afterEach(function() {
-      ljs.load.restore();
-    });
-
     it('should respond with error', function() {
       expect(callback.called).toBe(true);
       expect(callback.args[0][0]).toBe(
@@ -291,7 +286,7 @@ describe('oc-client : render', function() {
 
   describe('when adding support to new template', function() {
     describe('and the new template client-dependency is not loaded', function() {
-      var originalEmoji, jEmoji, originalLjsLoad, callback, headSpy, cbSpy;
+      var originalLjsLoad, callback, headSpy, cbSpy;
       beforeEach(function() {
         originalLjsLoad = ljs.load;
         headSpy = sinon.spy();

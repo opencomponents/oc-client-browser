@@ -22,6 +22,7 @@
     "saucelabs": "grunt sauce",
     "test": "grunt test",
     "build": "grunt build",
+    "lint": "eslint .",
     "precommit": "lint-staged",
     "prepublish": "npm run build"
   },
@@ -42,7 +43,7 @@
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-sauce-launcher": "^1.0.0",
     "karma-sinon": "^1.0.5",
-    "lint-staged": "^6.0.0",
+    "lint-staged": "^7.0.0",
     "load-grunt-tasks": "^3.5.2",
     "lodash": "^4.17.4",
     "phantomjs-prebuilt": "^2.1.12",

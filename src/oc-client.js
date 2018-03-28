@@ -1,10 +1,11 @@
-'use strict';
+/* globals define, exports, require */
 /* eslint no-var: 'off' */
 /* eslint prefer-arrow-callback: 'off' */
 
 var oc = oc || {};
 
 (function(root, factory) {
+  'use strict';
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module
     define(['exports', 'jquery'], function(exports, $) {
@@ -22,6 +23,7 @@ var oc = oc || {};
     factory((root.oc = oc), root.$, root.ljs, root.document, root.window);
   }
 })(this, function(exports, $, ljs, $document, $window) {
+  'use strict';
   // jshint ignore:line
   // public variables
   oc.conf = oc.conf || {};
@@ -86,9 +88,11 @@ var oc = oc || {};
 
   var logger = {
     error: function(msg) {
+      // eslint-disable-next-line no-console
       return console.log(msg);
     },
     info: function(msg) {
+      // eslint-disable-next-line no-console
       return debug ? console.log(msg) : false;
     }
   };
