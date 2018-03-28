@@ -252,10 +252,6 @@ describe('oc-client : render', function() {
       );
     });
 
-    afterEach(function() {
-      ljs.load.restore();
-    });
-
     it('should respond with error', function() {
       expect(callback.called).toBe(true);
       expect(callback.args[0][0]).toBe(
