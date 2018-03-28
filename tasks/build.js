@@ -28,8 +28,10 @@ module.exports = function(grunt) {
         bundle = `${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
 
       const compressed = uglifyJs.minify(bundle, {
-        fromString: true,
-        outSourceMap: 'oc-client.min.map'
+        sourceMap: {
+          filename: 'oc-client.min.js',
+          url: 'oc-client.min.map'
+        }
       });
 
       const compressedCode = `${license}\n${compressed.code}`;
