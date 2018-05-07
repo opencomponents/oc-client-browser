@@ -59,7 +59,7 @@
     "karma-sauce-launcher": "^1.0.0",
     "karma-sinon": "^1.0.5",
     "lint-staged": "^7.0.0",
-    "load-grunt-tasks": "^3.5.2",
+    "load-grunt-tasks": "^4.0.0",
     "lodash": "^4.17.4",
     "phantomjs-prebuilt": "^2.1.12",
     "prettier-eslint-cli": "^4.1.1",
