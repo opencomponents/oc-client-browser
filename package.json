@@ -64,6 +64,6 @@
     "phantomjs-prebuilt": "^2.1.12",
     "prettier-eslint-cli": "^4.1.1",
     "sinon": "^5.0.0",
-    "uglify-js": "3.3.23"
+    "uglify-js": "3.3.24"
   }
 }
