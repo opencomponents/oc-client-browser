@@ -118,10 +118,10 @@ var oc = oc || {};
     }
   };
 
-  function registerTemplates(templates) {
+  function registerTemplates(templates, overwrite) {
     templates = Array.isArray(templates) ? templates : [templates];
     templates.forEach(function(template) {
-      if (!registeredTemplates[template.type]) {
+      if (overwrite || !registeredTemplates[template.type]) {
         registeredTemplates[template.type] = {
           externals: template.externals
         };
@@ -130,7 +130,7 @@ var oc = oc || {};
   }
 
   if (oc.conf.templates) {
-    registerTemplates(oc.conf.templates);
+    registerTemplates(oc.conf.templates, true);
   }
 
   var retry = function(component, cb, failedRetryCb) {
