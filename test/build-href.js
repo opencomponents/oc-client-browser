@@ -112,5 +112,24 @@ describe('oc-client : build', function() {
         expect(result).toEqual(expected);
       });
     });
+
+    describe('when building a component with special characters in the param values', function() {
+      var result = execute({
+        baseUrl: 'http://www.components.com/v2',
+        name: 'myComponent',
+        parameters: {
+          hello: '*!&=#'
+        }
+      });
+
+      it('should build the correct Href with the parameters escaped', function() {
+        var expectedHref =
+            'http://www.components.com/v2/myComponent/?hello=*!%26%3D%23',
+          expected =
+            '<oc-component href="' + expectedHref + '"></oc-component>';
+
+        expect(result).toEqual(expected);
+      });
+    });
   });
 });
