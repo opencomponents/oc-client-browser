@@ -10,6 +10,7 @@ module.exports = {
     'jQuery.XDomainRequest.js',
     'jade.runtime.js',
     'handlebars.runtime.js',
+    'tiny-querystring.js',
 
     // The tests settings
     'test-settings.js',
