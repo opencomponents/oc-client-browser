@@ -135,5 +135,22 @@ describe('oc-client : build', function() {
         expect(parameters.message4).toEqual('Jamie?James');
       });
     });
+
+    describe('when building a component with encoded characters but no special characters in the param values', function() {
+      var result = execute({
+        baseUrl: 'http://www.components.com/v2',
+        name: 'myComponent',
+        parameters: {
+          gpid: 'fhdDk612M4mjT70xkKCZRg%3d%3d'
+        }
+      });
+
+      it('the parameter value should become decoded when parsed', function() {
+        var querystring = /href=".*?\?(.*?)"/.exec(result)[1];
+        var parameters = parseQuerystring(querystring);
+
+        expect(parameters.gpid).toEqual('fhdDk612M4mjT70xkKCZRg==');
+      });
+    });
   });
 });
