@@ -332,11 +332,11 @@ var oc = oc || {};
       href += '?';
       for (var parameter in options.parameters) {
         if (options.parameters.hasOwnProperty(parameter)) {
-          href +=
-            parameter +
-            '=' +
-            encodeURIComponent(options.parameters[parameter]) +
-            '&';
+          var value = options.parameters[parameter];
+          if (/[+&=]/.test(value)) {
+            value = encodeURIComponent(value);
+          }
+          href += parameter + '=' + value + '&';
         }
       }
       href = href.slice(0, -1);

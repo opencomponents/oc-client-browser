@@ -118,17 +118,38 @@ describe('oc-client : build', function() {
         baseUrl: 'http://www.components.com/v2',
         name: 'myComponent',
         parameters: {
-          hello: '*!&=#'
+          message1: 'Jack&Jane',
+          message2: 'Jane+Joseph',
+          message3: 'Joseph=Joe',
+          message4: 'Jamie?James'
         }
       });
 
-      it('should build the correct Href with the parameters escaped', function() {
-        var expectedHref =
-            'http://www.components.com/v2/myComponent/?hello=*!%26%3D%23',
-          expected =
-            '<oc-component href="' + expectedHref + '"></oc-component>';
+      it('the parameter value should remain intact when parsed', function() {
+        var querystring = /href=".*?\?(.*?)"/.exec(result)[1];
+        var parameters = parseQuerystring(querystring);
 
-        expect(result).toEqual(expected);
+        expect(parameters.message1).toEqual('Jack&Jane');
+        expect(parameters.message2).toEqual('Jane+Joseph');
+        expect(parameters.message3).toEqual('Joseph=Joe');
+        expect(parameters.message4).toEqual('Jamie?James');
+      });
+    });
+
+    describe('when building a component with encoded characters but no special characters in the param values', function() {
+      var result = execute({
+        baseUrl: 'http://www.components.com/v2',
+        name: 'myComponent',
+        parameters: {
+          gpid: 'fhdDk612M4mjT70xkKCZRg%3d%3d'
+        }
+      });
+
+      it('the parameter value should become decoded when parsed', function() {
+        var querystring = /href=".*?\?(.*?)"/.exec(result)[1];
+        var parameters = parseQuerystring(querystring);
+
+        expect(parameters.gpid).toEqual('fhdDk612M4mjT70xkKCZRg==');
       });
     });
   });
