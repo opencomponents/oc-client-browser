@@ -1,5 +1,22 @@
 'use strict';
 
+//Source: https://github.com/Cap32/tiny-querystring/blob/67ce6ea001d0538b1d2829fb15b667df29679a9e/tiny-querystring.js
+function parseQuerystring(str) {
+  var decode = decodeURIComponent;
+  return (str + '')
+    .replace(/\+/g, ' ')
+    .split('&')
+    .filter(Boolean)
+    .reduce(function(obj, item, index) {
+      var ref = item.split('=');
+      var key = decode(ref[0] || '');
+      var val = decode(ref[1] || '');
+      var prev = obj[key];
+      obj[key] = prev === undefined ? val : [].concat(prev, val);
+      return obj;
+    }, {});
+}
+
 describe('oc-client : build', function() {
   var execute = function(parameters) {
     return oc.build(parameters);
@@ -118,17 +135,21 @@ describe('oc-client : build', function() {
         baseUrl: 'http://www.components.com/v2',
         name: 'myComponent',
         parameters: {
-          hello: '*!&=#'
+          message1: 'Jack&Jane',
+          message2: 'Jane+Joseph',
+          message3: 'Joseph=Joe',
+          message4: 'Jamie?James'
         }
       });
 
-      it('should build the correct Href with the parameters escaped', function() {
-        var expectedHref =
-            'http://www.components.com/v2/myComponent/?hello=*!%26%3D%23',
-          expected =
-            '<oc-component href="' + expectedHref + '"></oc-component>';
+      it('the parameter value should remain intact when parsed', function() {
+        var querystring = /href=".*?\?(.*?)"/.exec(result)[1];
+        var parameters = parseQuerystring(querystring);
 
-        expect(result).toEqual(expected);
+        expect(parameters.message1).toEqual('Jack&Jane');
+        expect(parameters.message2).toEqual('Jane+Joseph');
+        expect(parameters.message3).toEqual('Joseph=Joe');
+        expect(parameters.message4).toEqual('Jamie?James');
       });
     });
   });
