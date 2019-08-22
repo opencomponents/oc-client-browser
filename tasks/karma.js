@@ -49,9 +49,9 @@ const customLaunchers = {
   },
   safari: {
     base: 'SauceLabs',
-    browserName: 'safari',
-    platform: 'macOS 10.14',
-    version: '12.0'
+    browserName: 'Safari',
+    platform: 'OS X 10.10',
+    version: '8'
   },
   ipad: {
     base: 'SauceLabs',
