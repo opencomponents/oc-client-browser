@@ -377,6 +377,9 @@ var oc = oc || {};
             on: function(key, cb) {
               return obj.on(key, cb || noop);
             },
+            off: function(events, selectorOrHandler, handler) {
+              return obj.off(events, selectorOrHandler, handler);
+            },
             reset: function() {
               return obj.off();
             }
