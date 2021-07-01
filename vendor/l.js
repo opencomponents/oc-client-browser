@@ -98,7 +98,7 @@
           loaded[url] = (function (cb) { return function () { loaded[url] = true; cb && cb(); }; })(cb);
           cb = function () { loaded[url](); };
           appendElmt('script', {
-            type: 'text/javascript', src: url, id: parts.i, onerror: function (error) {
+            type: 'text/javascript', src: url, id: parts.i, crossOrigin: 'anonymous', onerror: function (error) {
               if (parts.f) {
                 var c = error.currentTarget;
                 c.parentNode.removeChild(c);
