@@ -43,7 +43,7 @@ var oc = oc || {};
     IE9_AJAX_POLYFILL_URL =
       CDNJS_BASEURL +
       'jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js',
-    JQUERY_URL = CDNJS_BASEURL + 'jquery/1.11.2/jquery.min.js',
+    JQUERY_URL = CDNJS_BASEURL + 'jquery/3.6.0/jquery.min.js',
     RETRY_INTERVAL = oc.conf.retryInterval || 5000,
     RETRY_LIMIT = oc.conf.retryLimit || 30,
     RETRY_SEND_NUMBER = oc.conf.retrySendNumber || true,
