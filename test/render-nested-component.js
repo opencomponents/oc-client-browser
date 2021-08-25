@@ -8,13 +8,13 @@ describe('oc-client : renderNestedComponent', function() {
     componentContainer =
       '<oc-component href="' + componentHref + '"></oc-component>';
 
-  var initialise = function($component, fail) {
+  var initialise = function(component, fail) {
     htmlBeforeRendering = '';
 
     console.log = function() {};
 
     oc.renderByHref = function(href, cb) {
-      htmlBeforeRendering = $component.html();
+      htmlBeforeRendering = $(component).html();
       cb(fail, {
         html: '<div>this is the component content</div>',
         version: '1.0.0',
@@ -31,6 +31,20 @@ describe('oc-client : renderNestedComponent', function() {
     oc.renderedComponents = {};
     oc.events.reset();
   };
+
+  describe('when passing a non-jquery html element', function() {
+    var component = document.createElement('oc-component');
+    component.setAttribute('href', componentHref);
+
+    beforeEach(function(done) {
+      initialise(component);
+      oc.renderNestedComponent(component, done);
+    });
+
+    it('should work the same', function() {
+      expect(component.innerHTML).toContain('this is the component content');
+    });
+  });
 
   describe('when rendering component successfully', function() {
     var $component;

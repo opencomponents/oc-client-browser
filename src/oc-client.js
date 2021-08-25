@@ -473,9 +473,10 @@ var oc = oc || {};
     });
   };
 
-  oc.renderNestedComponent = function($component, callback) {
+  oc.renderNestedComponent = function(component, callback) {
     oc.ready(function() {
-      var dataRendering = $component.attr('data-rendering'),
+      var $component = oc.$(component),
+        dataRendering = $component.attr('data-rendering'),
         dataRendered = $component.attr('data-rendered'),
         isRendering = isBool(dataRendering)
           ? dataRendering
