@@ -475,8 +475,7 @@ var oc = oc || {};
 
   oc.renderNestedComponent = function(component, callback) {
     oc.ready(function() {
-      var $component =
-          typeof component.jquery === 'string' ? component : oc.$(component),
+      var $component = oc.$(component),
         dataRendering = $component.attr('data-rendering'),
         dataRendered = $component.attr('data-rendered'),
         isRendering = isBool(dataRendering)

@@ -8,15 +8,13 @@ describe('oc-client : renderNestedComponent', function() {
     componentContainer =
       '<oc-component href="' + componentHref + '"></oc-component>';
 
-  var initialise = function($component, fail) {
+  var initialise = function(component, fail) {
     htmlBeforeRendering = '';
 
     console.log = function() {};
 
     oc.renderByHref = function(href, cb) {
-      htmlBeforeRendering = $component.jquery
-        ? $component.html()
-        : $component.innerHTML;
+      htmlBeforeRendering = $(component).html();
       cb(fail, {
         html: '<div>this is the component content</div>',
         version: '1.0.0',
