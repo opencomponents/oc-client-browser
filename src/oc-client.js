@@ -115,7 +115,8 @@ var oc = oc || {};
             'https://cdnjs.cloudflare.com/ajax/libs/jade/1.11.0/runtime.min.js'
         }
       ]
-    }
+    },
+    'oc-template-es6': { externals: [] }
   };
 
   function registerTemplates(templates, overwrite) {
