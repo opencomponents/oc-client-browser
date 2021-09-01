@@ -103,7 +103,7 @@ var oc = oc || {};
         {
           global: 'Handlebars',
           url:
-            'https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.6/handlebars.runtime.min.js'
+            'https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.7/handlebars.runtime.min.js'
         }
       ]
     },
