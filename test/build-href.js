@@ -1,60 +1,60 @@
 'use strict';
 
-describe('oc-client : build', function() {
-  var execute = function(parameters) {
+describe('oc-client : build', function () {
+  var execute = function (parameters) {
     return oc.build(parameters);
   };
 
-  describe('when not providing the mandatory parameters', function() {
-    describe('when building a component without baseUrl', function() {
-      var throwingFunction = function() {
+  describe('when not providing the mandatory parameters', function () {
+    describe('when building a component without baseUrl', function () {
+      var throwingFunction = function () {
         return execute({ name: 'someName' });
       };
 
-      it('should throw an error', function() {
+      it('should throw an error', function () {
         expect(throwingFunction).toThrow('baseUrl parameter is required');
       });
     });
 
-    describe('when building a component without name', function() {
-      var throwingFunction = function() {
+    describe('when building a component without name', function () {
+      var throwingFunction = function () {
         return execute({ baseUrl: 'http://www.opencomponents.com' });
       };
 
-      it('should throw an error', function() {
+      it('should throw an error', function () {
         expect(throwingFunction).toThrow('name parameter is required');
       });
     });
   });
 
-  describe('when providing the mandatory parameters', function() {
-    describe('when building a component with baseUrl, name', function() {
+  describe('when providing the mandatory parameters', function () {
+    describe('when building a component with baseUrl, name', function () {
       var result = execute({
         baseUrl: 'http://www.components.com/v2',
         name: 'myComponent'
       });
 
-      it('should build the correct Href', function() {
+      it('should build the correct Href', function () {
         var expected =
           '<oc-component href="http://www.components.com/v2/myComponent/"></oc-component>';
         expect(result).toEqual(expected);
       });
     });
 
-    describe('when building a component with baseUrl/, name', function() {
+    describe('when building a component with baseUrl/, name', function () {
       var result = execute({
         baseUrl: 'http://www.components.com/v2/',
         name: 'myComponent'
       });
 
-      it('should build the correct Href', function() {
+      it('should build the correct Href', function () {
         var expected =
           '<oc-component href="http://www.components.com/v2/myComponent/"></oc-component>';
         expect(result).toEqual(expected);
       });
     });
 
-    describe('when building a component with baseUrl, name, params', function() {
+    describe('when building a component with baseUrl, name, params', function () {
       var result = execute({
         baseUrl: 'http://www.components.com/v2',
         name: 'myComponent',
@@ -65,7 +65,7 @@ describe('oc-client : build', function() {
         }
       });
 
-      it('should build the correct Href', function() {
+      it('should build the correct Href', function () {
         var expectedHref =
             'http://www.components.com/v2/myComponent/?hello=world&integer=123&boo=true',
           expected =
@@ -75,14 +75,14 @@ describe('oc-client : build', function() {
       });
     });
 
-    describe('when building a component with baseUrl, name, version', function() {
+    describe('when building a component with baseUrl, name, version', function () {
       var result = execute({
         baseUrl: 'http://www.components.com/v2',
         name: 'myComponent',
         version: '1.0.X'
       });
 
-      it('should build the correct Href', function() {
+      it('should build the correct Href', function () {
         var expectedHref = 'http://www.components.com/v2/myComponent/1.0.X/',
           expected =
             '<oc-component href="' + expectedHref + '"></oc-component>';
@@ -91,7 +91,7 @@ describe('oc-client : build', function() {
       });
     });
 
-    describe('when building a component with baseUrl, name, params, version', function() {
+    describe('when building a component with baseUrl, name, params, version', function () {
       var result = execute({
         baseUrl: 'http://www.components.com/v2',
         name: 'myComponent',
@@ -103,7 +103,7 @@ describe('oc-client : build', function() {
         version: '1.2.3'
       });
 
-      it('should build the correct Href', function() {
+      it('should build the correct Href', function () {
         var expectedHref =
             'http://www.components.com/v2/myComponent/1.2.3/?hello=world&integer=123&boo=true',
           expected =
@@ -113,7 +113,7 @@ describe('oc-client : build', function() {
       });
     });
 
-    describe('when building a component with special characters in the param values', function() {
+    describe('when building a component with special characters in the param values', function () {
       var result = execute({
         baseUrl: 'http://www.components.com/v2',
         name: 'myComponent',
@@ -125,8 +125,9 @@ describe('oc-client : build', function() {
         }
       });
 
-      it('the parameter value should remain intact when parsed', function() {
+      it('the parameter value should remain intact when parsed', function () {
         var querystring = /href=".*?\?(.*?)"/.exec(result)[1];
+        // eslint-disable-next-line no-undef
         var parameters = parseQuerystring(querystring);
 
         expect(parameters.message1).toEqual('Jack&Jane');
@@ -136,7 +137,7 @@ describe('oc-client : build', function() {
       });
     });
 
-    describe('when building a component with encoded characters but no special characters in the param values', function() {
+    describe('when building a component with encoded characters but no special characters in the param values', function () {
       var result = execute({
         baseUrl: 'http://www.components.com/v2',
         name: 'myComponent',
@@ -145,8 +146,9 @@ describe('oc-client : build', function() {
         }
       });
 
-      it('the parameter value should become decoded when parsed', function() {
+      it('the parameter value should become decoded when parsed', function () {
         var querystring = /href=".*?\?(.*?)"/.exec(result)[1];
+        // eslint-disable-next-line no-undef
         var parameters = parseQuerystring(querystring);
 
         expect(parameters.gpid).toEqual('fhdDk612M4mjT70xkKCZRg==');

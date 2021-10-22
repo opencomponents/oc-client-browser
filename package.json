@@ -31,40 +31,44 @@
     "build": "grunt build",
     "lint": "eslint .",
     "precommit": "lint-staged",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "prepare": "husky install"
   },
   "lint-staged": {
     "src/**/*.js": [
-      "prettier-eslint --write",
-      "git add"
+      "prettier --write"
     ],
     "tasks/*.js": [
-      "prettier-eslint --write",
-      "git add"
+      "prettier --write"
     ],
     "test/*.js": [
-      "prettier-eslint --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "devDependencies": {
-    "fs-extra": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.1.0",
+    "@typescript-eslint/parser": "^5.1.0",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "fs-extra": "10.0.0",
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
     "grunt-karma": "^3.0.2",
-    "husky": "^0.14.3",
+    "husky": "7.0.4",
     "jasmine-core": "^2.5.1",
     "karma": "4.2.0",
     "karma-jasmine": "^1.0.2",
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-sauce-launcher": "^1.0.0",
     "karma-sinon": "^1.0.5",
-    "lint-staged": "^7.0.0",
+    "lint-staged": "11.2.3",
     "load-grunt-tasks": "^4.0.0",
-    "lodash": "^4.17.4",
+    "lodash": "4.17.21",
     "phantomjs-prebuilt": "^2.1.12",
-    "prettier-eslint-cli": "^4.1.1",
+    "prettier": "^2.4.1",
     "sinon": "^6.0.0",
-    "uglify-js": "3.3.28"
+    "typescript": "^4.4.4",
+    "uglify-js": "3.14.2"
   }
 }

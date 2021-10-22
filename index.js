@@ -7,16 +7,15 @@ const clientLibFileName = 'oc-client.min.js';
 const clientMapFileName = 'oc-client.min.map';
 const version = require('./package.json').version;
 
-
 module.exports = {
-  getLib(cb){
+  getLib(cb) {
     return fs.readFile(
       path.join(__dirname, distDir, clientLibFileName),
       'utf8',
       cb
     );
   },
-  getMap(cb){
+  getMap(cb) {
     return fs.readFile(
       path.join(__dirname, distDir, clientMapFileName),
       'utf8',
