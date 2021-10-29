@@ -5,7 +5,7 @@ function parseQuerystring(str) {
     .replace(/\+/g, ' ')
     .split('&')
     .filter(Boolean)
-    .reduce(function(obj, item, index) {
+    .reduce(function (obj, item, index) {
       var ref = item.split('=');
       var key = decode(ref[0] || '');
       var val = decode(ref[1] || '');
