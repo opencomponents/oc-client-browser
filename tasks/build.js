@@ -6,11 +6,11 @@ const uglifyJs = require('uglify-js');
 
 const packageJson = require('../package');
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   grunt.registerTask(
     'build',
     'Builds and minifies the oc-client component',
-    function() {
+    function () {
       const done = this.async(),
         version = packageJson.version,
         srcPath = '../src/',
