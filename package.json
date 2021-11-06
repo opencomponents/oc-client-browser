@@ -29,7 +29,7 @@
   ],
   "scripts": {
     "saucelabs": "grunt sauce",
-    "test": "grunt test",
+    "test": "npm run build && grunt test",
     "build": "node tasks/build.js",
     "lint": "eslint .",
     "precommit": "lint-staged",
