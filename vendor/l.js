@@ -1,5 +1,5 @@
 //https://github.com/malko/l.js
-(function (window, undefined) {
+(function(window, undefined) {
   /*
    * script for js/css parallel loading with dependancies management
    * @author Jonathan Gotti < jgotti at jgotti dot net >
@@ -20,7 +20,7 @@
    *            - 2012-04-19 - add addAliases method
    * @note coding style is implied by the target usage of this script not my habbits
    */
-  var isA = function (a, b) {
+  var isA = function(a, b) {
       return a instanceof (b || Array);
     },
     //-- some minifier optimisation
@@ -38,21 +38,21 @@
     var checkLoaded = scriptTag.src.match(/checkLoaded/) ? 1 : 0,
       //-- keep trace of header as we will make multiple access to it
       header = D[getElementsByTagName]('head')[0] || D.documentElement,
-      urlParse = function (url) {
+      urlParse = function(url) {
         var parts = {}; // u => url, i => id, f = fallback
-        parts.u = url.replace(/#(=)?([^#]*)?/g, function (m, a, b) {
+        parts.u = url.replace(/#(=)?([^#]*)?/g, function(m, a, b) {
           parts[a ? 'f' : 'i'] = b;
           return '';
         });
         return parts;
       },
-      appendElmt = function (type, attrs, cb) {
+      appendElmt = function(type, attrs, cb) {
         var e = D.createElement(type),
           i;
         if (cb) {
           //-- this is not intended to be used for link
           if (e[readyState]) {
-            e[onreadystatechange] = function () {
+            e[onreadystatechange] = function() {
               if (e[readyState] === 'loaded' || e[readyState] === 'complete') {
                 e[onreadystatechange] = null;
                 cb();
@@ -68,7 +68,7 @@
         header.appendChild(e);
         // return e; // unused at this time so drop it
       },
-      load = function (url, cb) {
+      load = function(url, cb) {
         if (this.aliases && this.aliases[url]) {
           var args = this.aliases[url].slice(0);
           isA(args) || (args = [args]);
@@ -91,7 +91,7 @@
       loaded = {}, // will handle already loaded urls
       loader = {
         aliases: {},
-        loadjs: function (url, cb) {
+        loadjs: function(url, cb) {
           var parts = urlParse(url);
           url = parts.u;
           if (loaded[url] === true) {
@@ -101,8 +101,8 @@
           } else if (loaded[url] !== undefined) {
             // already asked for loading we append callback if any else return
             if (cb) {
-              loaded[url] = (function (ocb, cb) {
-                return function () {
+              loaded[url] = (function(ocb, cb) {
+                return function() {
                   ocb && ocb();
                   cb && cb();
                 };
@@ -111,13 +111,13 @@
             return this;
           }
           // first time we ask this script
-          loaded[url] = (function (cb) {
-            return function () {
+          loaded[url] = (function(cb) {
+            return function() {
               loaded[url] = true;
               cb && cb();
             };
           })(cb);
-          cb = function () {
+          cb = function() {
             loaded[url]();
           };
           appendElmt(
@@ -126,7 +126,7 @@
               type: 'text/javascript',
               src: url,
               id: parts.i,
-              onerror: function (error) {
+              onerror: function(error) {
                 if (parts.f) {
                   var c = error.currentTarget;
                   c.parentNode.removeChild(c);
@@ -142,7 +142,7 @@
           );
           return this;
         },
-        loadcss: function (url, cb) {
+        loadcss: function(url, cb) {
           var parts = urlParse(url);
           url = parts.u;
           loaded[url] ||
@@ -156,7 +156,7 @@
           cb && cb();
           return this;
         },
-        load: function () {
+        load: function() {
           var argv = arguments,
             argc = argv[length];
           if (argc === 1 && isA(argv[0], Function)) {
@@ -168,13 +168,13 @@
             argv[0],
             argc <= 1
               ? undefined
-              : function () {
+              : function() {
                   loader.load.apply(loader, [].slice.call(argv, 1));
                 }
           );
           return this;
         },
-        addAliases: function (aliases) {
+        addAliases: function(aliases) {
           for (var i in aliases) {
             this.aliases[i] = isA(aliases[i])
               ? aliases[i].slice(0)
