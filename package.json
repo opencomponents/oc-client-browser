@@ -23,12 +23,14 @@
   "license": "MIT",
   "files": [
     "dist",
+    "vendor",
+    "src",
     "index.js"
   ],
   "scripts": {
     "saucelabs": "grunt sauce",
     "test": "grunt test",
-    "build": "grunt build",
+    "build": "node tasks/build.js",
     "lint": "eslint .",
     "precommit": "lint-staged",
     "prepublish": "npm run build",
@@ -54,7 +56,7 @@
     "fs-extra": "10.0.0",
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
-    "grunt-karma": "^3.0.2",
+    "grunt-karma": "^4.0.2",
     "husky": "7.0.4",
     "jasmine-core": "^2.5.1",
     "karma": "6.3.5",
@@ -68,10 +70,10 @@
     "phantomjs-prebuilt": "^2.1.12",
     "prettier": "^2.4.1",
     "sinon": "^6.0.0",
-    "typescript": "^4.4.4",
-    "uglify-js": "3.14.2"
+    "typescript": "^4.4.4"
   },
   "dependencies": {
+    "uglify-js": "3.14.2",
     "universalify": "2.0.0"
   }
 }

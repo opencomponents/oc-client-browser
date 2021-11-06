@@ -99,25 +99,7 @@ var oc = oc || {};
     }
   };
 
-  var registeredTemplates = {
-    'oc-template-handlebars': {
-      externals: [
-        {
-          global: 'Handlebars',
-          url: 'https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.7/handlebars.runtime.min.js'
-        }
-      ]
-    },
-    'oc-template-jade': {
-      externals: [
-        {
-          global: 'jade',
-          url: 'https://cdnjs.cloudflare.com/ajax/libs/jade/1.11.0/runtime.min.js'
-        }
-      ]
-    },
-    'oc-template-es6': { externals: [] }
-  };
+  var registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__;
 
   function registerTemplates(templates, overwrite) {
     templates = Array.isArray(templates) ? templates : [templates];
