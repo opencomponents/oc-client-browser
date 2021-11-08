@@ -1,9 +1,9 @@
 language: node_js
 matrix:
   include:
-  - node_js: '6'
+  - node_js: '8'
 script:
-- npm run saucelabs
+- yarn run saucelabs
 notifications:
   email: false
 env:

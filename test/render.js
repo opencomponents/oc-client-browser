@@ -9,10 +9,10 @@ var emojiCompiledView =
 var jadeCompiledView =
   'oc.components=oc.components||{},oc.components["09227309bca0b1ec1866c547ebb76c74921e85d2"]=function(n){var e,o=[],c=n||{};return function(n){o.push("<span>hello "+jade.escape(null==(e=n)?"":e)+"</span>")}.call(this,"name"in c?c.name:"undefined"!=typeof name?name:void 0),o.join("")};';
 
-describe('oc-client : render', function() {
-  describe('when rendering unavailable component', function() {
+describe('oc-client : render', function () {
+  describe('when rendering unavailable component', function () {
     var callback;
-    beforeEach(function() {
+    beforeEach(function () {
       sinon.stub(ljs, 'load').yields();
       callback = sinon.spy();
       oc.render(
@@ -26,11 +26,11 @@ describe('oc-client : render', function() {
       );
     });
 
-    afterEach(function() {
+    afterEach(function () {
       ljs.load.restore();
     });
 
-    it('should error', function() {
+    it('should error', function () {
       expect(callback.called).toBe(true);
       expect(callback.args[0][0]).toEqual(
         'Error getting compiled view: https://my-cdn.com/components/a-component/1.2.123/template.js'
@@ -38,17 +38,17 @@ describe('oc-client : render', function() {
     });
   });
 
-  describe('when rendering handlebars component', function() {
-    describe('when handlebars runtime not loaded', function() {
+  describe('when rendering handlebars component', function () {
+    describe('when handlebars runtime not loaded', function () {
       var originalHandlebars, originalLjsLoad, callback, headSpy;
 
-      beforeEach(function() {
+      beforeEach(function () {
         originalHandlebars = Handlebars;
         originalLjsLoad = ljs.load;
         headSpy = sinon.spy();
         Handlebars = undefined;
 
-        ljs.load = function(url, cb) {
+        ljs.load = function (url, cb) {
           headSpy(url, cb);
           Handlebars = originalHandlebars;
           cb();
@@ -59,8 +59,7 @@ describe('oc-client : render', function() {
 
         oc.render(
           {
-            src:
-              'https://my-cdn.com/components/a-component/1.2.123/template.js',
+            src: 'https://my-cdn.com/components/a-component/1.2.123/template.js',
             type: 'handlebars',
             key: '46ee85c314b371cac60471cef5b2e2e6c443dccf'
           },
@@ -69,35 +68,34 @@ describe('oc-client : render', function() {
         );
       });
 
-      afterEach(function() {
+      afterEach(function () {
         Handlebars = originalHandlebars;
         ljs.load = originalLjsLoad;
       });
 
-      it('should require and wait for it', function() {
+      it('should require and wait for it', function () {
         expect(headSpy.called).toBe(true);
         expect(headSpy.args[0][0]).toEqual(
-          'https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.6/handlebars.runtime.min.js'
+          'https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.7/handlebars.runtime.min.js'
         );
       });
 
-      it('should render the component', function() {
+      it('should render the component', function () {
         expect(callback.called).toBe(true);
         expect(callback.args[0][0]).toBe(null);
         expect(callback.args[0][1]).toEqual('Hello world!');
       });
     });
 
-    describe('when handlebars runtime loaded', function() {
+    describe('when handlebars runtime loaded', function () {
       var callback, headSpy;
-      beforeEach(function() {
+      beforeEach(function () {
         headSpy = sinon.spy(ljs, 'load');
         callback = sinon.spy();
         eval(handlebarsCompiledView);
         oc.render(
           {
-            src:
-              'https://my-cdn.com/components/a-component/1.2.123/template.js',
+            src: 'https://my-cdn.com/components/a-component/1.2.123/template.js',
             type: 'handlebars',
             key: '46ee85c314b371cac60471cef5b2e2e6c443dccf'
           },
@@ -106,27 +104,50 @@ describe('oc-client : render', function() {
         );
       });
 
-      afterEach(function() {
+      afterEach(function () {
         ljs.load.restore();
       });
 
-      it('should not require it', function() {
+      it('should not require it', function () {
         expect(headSpy.called).toBe(false);
       });
 
-      it('should render the component', function() {
+      it('should render the component', function () {
         expect(callback.called).toBe(true);
         expect(callback.args[0][0]).toBe(null);
         expect(callback.args[0][1]).toEqual('Hello world!');
       });
     });
+
+    describe('when rendering an empty component', function () {
+      var callback;
+      beforeEach(function () {
+        callback = sinon.spy();
+        eval(handlebarsCompiledView);
+        oc.render(
+          {
+            src: 'https://my-cdn.com/components/a-component/1.2.123/template.js',
+            type: 'handlebars',
+            key: '46ee85c314b371cac60471cef5b2e2e6c443dccf'
+          },
+          { __oc_emptyResponse: true },
+          callback
+        );
+      });
+
+      it('should render the component as empty', function () {
+        expect(callback.called).toBe(true);
+        expect(callback.args[0][0]).toBe(null);
+        expect(callback.args[0][1]).toEqual('');
+      });
+    });
   });
 
-  describe('when handlebars runtime loaded and rendering a handlebars3 component', function() {
+  describe('when handlebars runtime loaded and rendering a handlebars3 component', function () {
     var callback,
       originalConsolelog = console.log;
-    beforeEach(function() {
-      console.log = function() {};
+    beforeEach(function () {
+      console.log = function () {};
       callback = sinon.spy();
       eval(handlebars3CompiledView);
       oc.render(
@@ -140,11 +161,11 @@ describe('oc-client : render', function() {
       );
     });
 
-    afterEach(function() {
+    afterEach(function () {
       console.log = originalConsolelog;
     });
 
-    it('should return the error', function() {
+    it('should return the error', function () {
       console.log(callback.args);
       expect(callback.called).toBe(true);
       expect(callback.args[0][0]).toContain(
@@ -153,16 +174,16 @@ describe('oc-client : render', function() {
     });
   });
 
-  describe('when rendering jade component', function() {
-    describe('when jade runtime not loaded', function() {
+  describe('when rendering jade component', function () {
+    describe('when jade runtime not loaded', function () {
       var originalJade, originalLjsLoad, callback, headSpy;
-      beforeEach(function() {
+      beforeEach(function () {
         originalJade = jade;
         originalLjsLoad = ljs.load;
         headSpy = sinon.spy();
         jade = undefined;
 
-        ljs.load = function(url, cb) {
+        ljs.load = function (url, cb) {
           headSpy(url, cb);
           jade = originalJade;
           cb();
@@ -173,8 +194,7 @@ describe('oc-client : render', function() {
 
         oc.render(
           {
-            src:
-              'https://my-cdn.com/components/a-component/1.2.456/template.js',
+            src: 'https://my-cdn.com/components/a-component/1.2.456/template.js',
             type: 'jade',
             key: '09227309bca0b1ec1866c547ebb76c74921e85d2'
           },
@@ -183,35 +203,34 @@ describe('oc-client : render', function() {
         );
       });
 
-      afterEach(function() {
+      afterEach(function () {
         jade = originalJade;
         ljs.load = originalLjsLoad;
       });
 
-      it('should require and wait for it', function() {
+      it('should require and wait for it', function () {
         expect(headSpy.called).toBe(true);
         expect(headSpy.args[0][0]).toEqual(
           'https://cdnjs.cloudflare.com/ajax/libs/jade/1.11.0/runtime.min.js'
         );
       });
 
-      it('should render the component', function() {
+      it('should render the component', function () {
         expect(callback.called).toBe(true);
         expect(callback.args[0][0]).toBe(null);
         expect(callback.args[0][1]).toEqual('<span>hello Michael</span>');
       });
     });
 
-    describe('when jade runtime loaded', function() {
+    describe('when jade runtime loaded', function () {
       var callback, headSpy;
-      beforeEach(function() {
+      beforeEach(function () {
         headSpy = sinon.spy(ljs, 'load');
         callback = sinon.spy();
         eval(jadeCompiledView);
         oc.render(
           {
-            src:
-              'https://my-cdn.com/components/a-component/1.2.456/template.js',
+            src: 'https://my-cdn.com/components/a-component/1.2.456/template.js',
             type: 'jade',
             key: '09227309bca0b1ec1866c547ebb76c74921e85d2'
           },
@@ -220,15 +239,15 @@ describe('oc-client : render', function() {
         );
       });
 
-      afterEach(function() {
+      afterEach(function () {
         ljs.load.restore();
       });
 
-      it('should not require it', function() {
+      it('should not require it', function () {
         expect(headSpy.called).toBe(false);
       });
 
-      it('should render the component', function() {
+      it('should render the component', function () {
         expect(callback.called).toBe(true);
         expect(callback.args[0][0]).toBe(null);
         expect(callback.args[0][1]).toEqual('<span>hello James</span>');
@@ -236,10 +255,9 @@ describe('oc-client : render', function() {
     });
   });
 
-  describe('when rendering unsupported component', function() {
-    var callback, headSpy;
-    beforeEach(function() {
-      headSpy = sinon.spy(ljs, 'load');
+  describe('when rendering unsupported component', function () {
+    var callback;
+    beforeEach(function () {
       callback = sinon.spy();
       eval(jadeCompiledView);
       oc.render(
@@ -253,11 +271,7 @@ describe('oc-client : render', function() {
       );
     });
 
-    afterEach(function() {
-      ljs.load.restore();
-    });
-
-    it('should respond with error', function() {
+    it('should respond with error', function () {
       expect(callback.called).toBe(true);
       expect(callback.args[0][0]).toBe(
         'Error loading component: view engine "hello!" not supported'
@@ -265,15 +279,15 @@ describe('oc-client : render', function() {
     });
   });
 
-  describe('when adding support to new template', function() {
-    describe('and the new template client-dependency is not loaded', function() {
-      var originalEmoji, jEmoji, originalLjsLoad, callback, headSpy, cbSpy;
-      beforeEach(function() {
+  describe('when adding support to new template', function () {
+    describe('and the new template client-dependency is not loaded', function () {
+      var originalLjsLoad, callback, headSpy, cbSpy;
+      beforeEach(function () {
         originalLjsLoad = ljs.load;
         headSpy = sinon.spy();
         cbSpy = sinon.spy();
         var count = 0;
-        ljs.load = function(url, cb) {
+        ljs.load = function (url, cb) {
           headSpy(url, cbSpy);
           cbSpy(count++);
           cb();
@@ -298,8 +312,7 @@ describe('oc-client : render', function() {
 
         oc.render(
           {
-            src:
-              'https://my-cdn.com/components/a-component/1.2.456/template.js',
+            src: 'https://my-cdn.com/components/a-component/1.2.456/template.js',
             type: 'emoji',
             key: '46ee85c314b371cac60471cef5b2e2e6c443dccc'
           },
@@ -308,11 +321,11 @@ describe('oc-client : render', function() {
         );
       });
 
-      afterEach(function() {
+      afterEach(function () {
         ljs.load = originalLjsLoad;
       });
 
-      it('should require and wait for it', function() {
+      it('should require and wait for it', function () {
         expect(cbSpy.args[0][0]).toBeLessThan(cbSpy.args[1][0]);
         expect(headSpy.called).toBe(true);
         expect(headSpy.args[0][0]).toEqual(
@@ -323,7 +336,7 @@ describe('oc-client : render', function() {
         );
       });
 
-      it('should render the component', function() {
+      it('should render the component', function () {
         expect(callback.called).toBe(true);
         expect(callback.args[0][0]).toBe(null);
         expect(callback.args[0][1]).toEqual('😎');

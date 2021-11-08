@@ -1,16 +1,20 @@
 {
+  "parser": "@typescript-eslint/parser",
   "env": {
-    "es6": false
+    "es6": true,
+    "node": true
   },
-  "extends": "eslint:recommended",
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
   "rules": {
-    "indent": ["error", 2],
-    "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "single", {
-      "avoidEscape": true,
-      "allowTemplateLiterals": true
-    }],
-    "semi": ["error", "always"],
-    "strict": ["error", "safe"]
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-empty-function": "off"
+  },
+  "globals": {
+    "oc": true,
+    "ljs": true
   }
 }
