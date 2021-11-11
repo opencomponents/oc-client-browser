@@ -1,6 +1,6 @@
 {
   "name": "oc-client-browser",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "OC browser client",
   "main": "index.js",
   "types": "index.d.ts",
@@ -25,7 +25,8 @@
     "dist",
     "vendor",
     "src",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "scripts": {
     "saucelabs": "grunt sauce",
