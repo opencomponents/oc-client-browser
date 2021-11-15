@@ -70,6 +70,7 @@ describe('oc-client : getData', function () {
             expect(spy.args[0][0].headers.Accept).toEqual(
               'application/vnd.oc.unrendered+json'
             );
+            oc.$.ajax.restore();
             done();
           }
         );
@@ -165,6 +166,35 @@ describe('oc-client : getData', function () {
             done();
           }
         );
+      });
+
+      describe('when json is requested', function () {
+        it('should call the $.ajax method correctly', function (done) {
+          var spy = sinon.spy(oc.$, 'ajax');
+
+          execute(
+            {
+              baseUrl: 'http://www.components.com/v2',
+              name: 'myComponent',
+              version: '6.6.6',
+              parameters: {
+                name: 'evil'
+              },
+              json: true
+            },
+            function () {
+              expect(spy.args[0][0].data).toEqual(
+                '{"components":[{"name":"myComponent","version":"6.6.6","parameters":{"name":"evil"}}]}'
+              );
+              expect(spy.args[0][0].dataType).toEqual('json');
+              expect(spy.args[0][0].headers['Content-Type']).toEqual(
+                'application/json'
+              );
+              oc.$.ajax.restore();
+              done();
+            }
+          );
+        });
       });
 
       describe('when globalParameters are provided', function () {
