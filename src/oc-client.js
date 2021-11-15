@@ -49,6 +49,7 @@ var oc = oc || {};
     RETRY_SEND_NUMBER = oc.conf.retrySendNumber || true,
     POLLING_INTERVAL = oc.conf.pollingInterval || 500,
     OC_TAG = oc.conf.tag || 'oc-component',
+    JSON_REQUESTS = !!oc.conf.jsonRequests,
     MESSAGES_ERRORS_HREF_MISSING = 'Href parameter missing',
     MESSAGES_ERRORS_RETRY_FAILED =
       'Failed to load {0} component {1} times. Giving up'.replace(
@@ -257,24 +258,30 @@ var oc = oc || {};
     isRequired('version', options.version);
     isRequired('baseUrl', options.baseUrl);
     isRequired('name', options.name);
-
-    oc.$.ajax({
+    var jsonRequest =
+      typeof options.json === 'boolean' ? options.json : JSON_REQUESTS;
+    var data = {
+      components: [
+        {
+          name: options.name,
+          version: options.version,
+          parameters: oc.$.extend(
+            {},
+            oc.conf.globalParameters,
+            options.parameters
+          )
+        }
+      ]
+    };
+    var headers = { Accept: 'application/vnd.oc.unrendered+json' };
+    if (jsonRequest) {
+      headers['Content-Type'] = 'application/json';
+    }
+    var ajaxOptions = {
       method: 'POST',
       url: options.baseUrl,
-      data: {
-        components: [
-          {
-            name: options.name,
-            version: options.version,
-            parameters: oc.$.extend(
-              {},
-              oc.conf.globalParameters,
-              options.parameters
-            )
-          }
-        ]
-      },
-      headers: { Accept: 'application/vnd.oc.unrendered+json' },
+      data: jsonRequest ? JSON.stringify(data) : data,
+      headers: headers,
       crossDomain: true,
       success: function (apiResponse) {
         if (apiResponse[0].response.renderMode === 'rendered') {
@@ -288,7 +295,12 @@ var oc = oc || {};
       error: function (err) {
         return cb(err);
       }
-    });
+    };
+    if (jsonRequest) {
+      ajaxOptions.dataType = 'json';
+    }
+
+    oc.$.ajax(ajaxOptions);
   };
 
   oc.build = function (options) {
