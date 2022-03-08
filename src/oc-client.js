@@ -163,6 +163,18 @@ var oc = oc || {};
     return href;
   };
 
+  var getHeaders = function () {
+    var globalHeaders =
+      typeof oc.conf.globalHeaders === 'function'
+        ? oc.conf.globalHeaders()
+        : oc.conf.globalHeaders;
+
+    return oc.$.extend(
+      { Accept: 'application/vnd.oc.unrendered+json' },
+      globalHeaders
+    );
+  };
+
   oc.addStylesToHead = function (styles) {
     oc.$('<style>' + styles + '</style>').appendTo(document.head);
   };
@@ -291,7 +303,7 @@ var oc = oc || {};
         }
       ]
     };
-    var headers = { Accept: 'application/vnd.oc.unrendered+json' };
+    var headers = getHeaders();
     if (jsonRequest) {
       headers['Content-Type'] = 'application/json';
     }
@@ -540,7 +552,7 @@ var oc = oc || {};
 
         oc.$.ajax({
           url: finalisedHref,
-          headers: { Accept: 'application/vnd.oc.unrendered+json' },
+          headers: getHeaders(),
           contentType: 'text/plain',
           crossDomain: true,
           success: function (apiResponse) {
