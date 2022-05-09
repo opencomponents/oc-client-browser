@@ -222,6 +222,61 @@ describe('oc-client : getData', function () {
                 'value'
               );
               delete oc.conf.globalParameters;
+              oc.$.ajax.restore();
+              done();
+            }
+          );
+        });
+      });
+
+      describe('When global haders are provided', function () {
+        it('should call the $.ajax method with the global headers as data', function (done) {
+          var spy = sinon.spy(oc.$, 'ajax');
+
+          oc.conf.globalHeaders = {
+            testHeader: 'headerValue'
+          };
+
+          execute(
+            {
+              baseUrl: 'http://www.components.com/v2',
+              name: 'myComponent',
+              version: '6.6.6',
+              parameters: {
+                name: 'evil'
+              }
+            },
+            function () {
+              expect(spy.args[0][0].headers.testHeader).toEqual('headerValue');
+              delete oc.conf.globalHeaders;
+              oc.$.ajax.restore();
+              done();
+            }
+          );
+        });
+
+        it('should call the $.ajax method with the global headers as function', function (done) {
+          var spy = sinon.spy(oc.$, 'ajax');
+
+          oc.conf.globalHeaders = function () {
+            return {
+              testHeader: 'headerValue'
+            };
+          };
+
+          execute(
+            {
+              baseUrl: 'http://www.components.com/v2',
+              name: 'myComponent',
+              version: '6.6.6',
+              parameters: {
+                name: 'evil'
+              }
+            },
+            function () {
+              expect(spy.args[0][0].headers.testHeader).toEqual('headerValue');
+              delete oc.conf.globalHeaders;
+              oc.$.ajax.restore();
               done();
             }
           );
