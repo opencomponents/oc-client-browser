@@ -524,7 +524,11 @@ var oc = oc || {};
               .attr('data-rendering', 'false')
               .attr('data-rendered', 'false')
               .html('');
-            oc.events.fire('oc:failed', { originalError: err, data: data });
+            oc.events.fire('oc:failed', {
+              originalError: err,
+              data: data,
+              href: $component.attr('href')
+            });
             logger.error(err);
             return callback();
           }

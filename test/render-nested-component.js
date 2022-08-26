@@ -97,6 +97,7 @@ describe('oc-client : renderNestedComponent', function () {
 
     it('should fire a failed event', function () {
       expect(failedEvent).toBeDefined();
+      expect(failedEvent.href).toBe('//oc-registry.com/my-component/');
     });
   });
 });
