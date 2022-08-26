@@ -527,7 +527,7 @@ var oc = oc || {};
             oc.events.fire('oc:failed', {
               originalError: err,
               data: data,
-              href: $component.attr('href')
+              component: $component[0]
             });
             logger.error(err);
             return callback();
