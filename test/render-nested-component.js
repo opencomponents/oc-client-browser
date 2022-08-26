@@ -68,10 +68,15 @@ describe('oc-client : renderNestedComponent', function () {
 
   describe('when rendering component does not succeed', function () {
     var $component;
+    var failedEvent;
 
     beforeEach(function (done) {
       $component = $(componentContainer);
       initialise($component, 'An error!');
+      oc.events.on('oc:failed', function (e, data) {
+        failedEvent = data;
+        done();
+      });
       oc.renderNestedComponent($component, done);
     });
 
@@ -83,6 +88,16 @@ describe('oc-client : renderNestedComponent', function () {
 
     it('should remove loading message then', function () {
       expect($component.html()).toEqual('');
+    });
+
+    it('should set rendering meta to false', function () {
+      expect($component.attr('data-rendering')).toBe('false');
+      expect($component.attr('data-rendered')).toBe('false');
+    });
+
+    it('should fire a failed event', function () {
+      expect(failedEvent).toBeDefined();
+      expect(failedEvent.component).toBe($component[0]);
     });
   });
 });
