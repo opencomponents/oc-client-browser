@@ -520,7 +520,11 @@ var oc = oc || {};
 
         oc.renderByHref($component.attr('href'), function (err, data) {
           if (err || !data) {
-            $component.html('');
+            $component
+              .attr('data-rendering', 'false')
+              .attr('data-rendered', 'false')
+              .html('');
+            oc.events.fire('oc:failed', { originalError: err, data: data });
             logger.error(err);
             return callback();
           }
