@@ -1,6 +1,6 @@
 {
   "name": "oc-client-browser",
-  "version": "1.5.7",
+  "version": "1.5.9",
   "description": "OC browser client",
   "main": "index.js",
   "types": "index.d.ts",
@@ -60,7 +60,7 @@
     "grunt-karma": "4.0.2",
     "husky": "7.0.4",
     "jasmine-core": "^2.5.1",
-    "karma": "6.3.5",
+    "karma": "6.3.16",
     "karma-jasmine": "^1.0.2",
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-sauce-launcher": "^1.0.0",

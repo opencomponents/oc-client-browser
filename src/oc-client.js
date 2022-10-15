@@ -145,6 +145,18 @@ var oc = oc || {};
     return href;
   };
 
+  var getHeaders = function () {
+    var globalHeaders =
+      typeof oc.conf.globalHeaders === 'function'
+        ? oc.conf.globalHeaders()
+        : oc.conf.globalHeaders;
+
+    return oc.$.extend(
+      { Accept: 'application/vnd.oc.unrendered+json' },
+      globalHeaders
+    );
+  };
+
   oc.addStylesToHead = function (styles) {
     oc.$('<style>' + styles + '</style>').appendTo(document.head);
   };
@@ -273,7 +285,7 @@ var oc = oc || {};
         }
       ]
     };
-    var headers = { Accept: 'application/vnd.oc.unrendered+json' };
+    var headers = getHeaders();
     if (jsonRequest) {
       headers['Content-Type'] = 'application/json';
     }
@@ -490,7 +502,15 @@ var oc = oc || {};
 
         oc.renderByHref($component.attr('href'), function (err, data) {
           if (err || !data) {
-            $component.html('');
+            $component
+              .attr('data-rendering', 'false')
+              .attr('data-rendered', 'false')
+              .html('');
+            oc.events.fire('oc:failed', {
+              originalError: err,
+              data: data,
+              component: $component[0]
+            });
             logger.error(err);
             return callback();
           }
@@ -522,7 +542,7 @@ var oc = oc || {};
 
         oc.$.ajax({
           url: finalisedHref,
-          headers: { Accept: 'application/vnd.oc.unrendered+json' },
+          headers: getHeaders(),
           contentType: 'text/plain',
           crossDomain: true,
           success: function (apiResponse) {
