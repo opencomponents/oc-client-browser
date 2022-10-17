@@ -36,7 +36,7 @@ module.exports = async function compile(conf = {}) {
   const vendorPath = '../vendor/';
   const licenseLink =
     'https://github.com/opencomponents/oc-client-browser/tree/master/LICENSES';
-  const license = `/*! OpenComponents client v${version} | (c) 2015-${new Date().getFullYear()} OpenTable, Inc. | ${licenseLink} */`;
+  const license = `/*! OpenComponents client v${version} | (c) 2015-${new Date().getFullYear()} OpenComponents community | ${licenseLink} */`;
   const l = await readFile(path.join(__dirname, vendorPath, 'l.js'), 'utf-8');
   const ocClient = (
     await readFile(path.join(__dirname, srcPath, 'oc-client.js'), 'utf-8')
