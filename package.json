@@ -1,6 +1,6 @@
 {
   "name": "oc-client-browser",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "OC browser client",
   "main": "index.js",
   "types": "index.d.ts",
@@ -22,6 +22,7 @@
   },
   "license": "MIT",
   "files": [
+    "tasks",
     "dist",
     "vendor",
     "src",
