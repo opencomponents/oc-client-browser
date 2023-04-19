@@ -54,10 +54,13 @@ describe('oc-client : renderUnloadedComponents', function () {
       anotherComponentHtml =
         '<oc-component href="' +
         anotherComponent.response.href +
-        '"></oc-component>';
+        '"></oc-component>',
+      failedComponent =
+        '<oc-component href="" data-failed="true"></oc-component>';
 
     oc.$('body').append(aComponentHtml);
     oc.$('body').append(anotherComponentHtml);
+    oc.$('body').append(failedComponent);
     eval(aComponent.view);
     eval(anotherComponent.view);
   };
@@ -92,7 +95,7 @@ describe('oc-client : renderUnloadedComponents', function () {
 
       afterEach(cleanup);
 
-      it('should fire an event for each rendered component', function () {
+      it('should fire an event for each rendered component and ignore the failed one', function () {
         expect(eventData.length).toEqual(2);
       });
 

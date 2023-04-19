@@ -95,6 +95,10 @@ describe('oc-client : renderNestedComponent', function () {
       expect($component.attr('data-rendered')).toBe('false');
     });
 
+    it('should set fail meta to true', function () {
+      expect($component.attr('data-failed')).toBe('true');
+    });
+
     it('should fire a failed event', function () {
       expect(failedEvent).toBeDefined();
       expect(failedEvent.component).toBe($component[0]);

@@ -505,6 +505,7 @@ var oc = oc || {};
             $component
               .attr('data-rendering', 'false')
               .attr('data-rendered', 'false')
+              .attr('data-failed', 'true')
               .html('');
             oc.events.fire('oc:failed', {
               originalError: err,
@@ -614,7 +615,9 @@ var oc = oc || {};
 
   oc.renderUnloadedComponents = function () {
     oc.ready(function () {
-      var $unloadedComponents = oc.$(OC_TAG + '[data-rendered!=true]'),
+      var $unloadedComponents = oc.$(
+          OC_TAG + '[data-rendered!=true][data-failed!=true]'
+        ),
         toDo = $unloadedComponents.length;
 
       var done = function () {
