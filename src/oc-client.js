@@ -1,8 +1,8 @@
-/* globals define, exports, require */
+/* globals define, exports, require, globalThis */
 /* eslint no-var: 'off' */
 /* eslint prefer-arrow-callback: 'off' */
 
-var oc = oc || {};
+var oc = typeof globalThis !== 'undefined' ? globalThis.oc || {} : oc || {};
 
 (function (root, factory) {
   'use strict';
@@ -22,7 +22,7 @@ var oc = oc || {};
     // Browser globals
     factory((root.oc = oc), root.$, root.ljs, root.document, root.window);
   }
-})(this, function (exports, $, ljs, $document, $window) {
+})(this || globalThis, function (exports, $, ljs, $document, $window) {
   'use strict';
   // jshint ignore:line
   // public variables
