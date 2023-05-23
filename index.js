@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { fromCallback, fromPromise } = require('universalify');
-const compile = require('./tasks/compile');
+const { compile, compileSync } = require('./tasks/compile');
 
 const distDir = 'dist';
 const clientLibFileName = 'oc-client.min.js';
@@ -27,6 +27,7 @@ function getMap(cb) {
 
 module.exports = {
   compile: fromPromise(compile),
+  compileSync,
   getLib: fromCallback(getLib),
   getMap: fromCallback(getMap),
   version

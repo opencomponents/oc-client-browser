@@ -2,7 +2,7 @@
 
 const fs = require('fs-extra');
 const path = require('path');
-const compile = require('./compile');
+const { compile } = require('./compile');
 
 async function build() {
   const distPath = '../dist/';
