@@ -28,22 +28,39 @@ const baseTemplates = {
   'oc-template-es6': { externals: [] }
 };
 
-module.exports = async function compile(conf = {}) {
+function getFiles({ sync = false, conf = {} }) {
   const registeredTemplates = { ...baseTemplates, ...conf.templates };
-
-  const version = packageJson.version;
   const srcPath = '../src/';
   const vendorPath = '../vendor/';
+
+  const lPath = path.join(__dirname, vendorPath, 'l.js');
+  const ocClientPath = path.join(__dirname, srcPath, 'oc-client.js');
+  const replaceTemplates = x =>
+    x.replace(
+      '__REGISTERED_TEMPLATES_PLACEHOLDER__',
+      JSON.stringify(registeredTemplates)
+    );
+
+  if (sync) {
+    const l = fs.readFileSync(lPath, 'utf-8');
+    const ocClient = replaceTemplates(fs.readFileSync(ocClientPath, 'utf-8'));
+
+    return [l, ocClient];
+  } else {
+    const lPromise = readFile(lPath, 'utf-8');
+    const ocClientPromise = readFile(ocClientPath, 'utf-8').then(
+      replaceTemplates
+    );
+
+    return Promise.all([lPromise, ocClientPromise]);
+  }
+}
+
+function compileFiles(l, ocClient) {
+  const version = packageJson.version;
   const licenseLink =
     'https://github.com/opencomponents/oc-client-browser/tree/master/LICENSES';
   const license = `/*! OpenComponents client v${version} | (c) 2015-${new Date().getFullYear()} OpenComponents community | ${licenseLink} */`;
-  const l = await readFile(path.join(__dirname, vendorPath, 'l.js'), 'utf-8');
-  const ocClient = (
-    await readFile(path.join(__dirname, srcPath, 'oc-client.js'), 'utf-8')
-  ).replace(
-    '__REGISTERED_TEMPLATES_PLACEHOLDER__',
-    JSON.stringify(registeredTemplates)
-  );
   const bundle = `${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
 
   const compressed = uglifyJs.minify(bundle, {
@@ -56,4 +73,17 @@ module.exports = async function compile(conf = {}) {
   const compressedCode = `${license}\n${compressed.code}`;
 
   return { code: compressedCode, map: compressed.map };
-};
+}
+
+async function compile(conf = {}) {
+  const [l, ocClient] = await getFiles({ sync: false, conf });
+  return compileFiles(l, ocClient);
+}
+
+function compileSync(conf = {}) {
+  const [l, ocClient] = getFiles({ sync: true, conf });
+  return compileFiles(l, ocClient);
+}
+
+exports.compile = compile;
+exports.compileSync = compileSync;

@@ -10,6 +10,9 @@ declare const ocClient: {
   compile: {
     (options?: CompileOptions): Promise<Compiled>;
   };
+  compileSync: {
+    (options?: CompileOptions): Compiled;
+  };
   getLib: {
     (cb: Callback<string>): void;
     (): Promise<string>;
