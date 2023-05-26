@@ -85,5 +85,7 @@ function compileSync(conf = {}) {
   return compileFiles(l, ocClient);
 }
 
-exports.compile = compile;
-exports.compileSync = compileSync;
+module.exports = {
+  compile: compile,
+  compileSync: compileSync,
+};
