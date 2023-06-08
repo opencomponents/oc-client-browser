@@ -66,7 +66,7 @@
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-sauce-launcher": "^1.0.0",
     "karma-sinon": "^1.0.5",
-    "lint-staged": "11.2.3",
+    "lint-staged": "13.2.1",
     "load-grunt-tasks": "^4.0.0",
     "lodash": "4.17.21",
     "phantomjs-prebuilt": "^2.1.12",
