@@ -36,7 +36,7 @@ function getFiles({ sync = false, conf = {} }) {
   const lPath = path.join(__dirname, vendorPath, 'l.js');
   const ocClientPath = path.join(__dirname, srcPath, 'oc-client.js');
   const replaceTemplates = x =>
-    x.replace(
+    x.replaceAll(
       '__REGISTERED_TEMPLATES_PLACEHOLDER__',
       JSON.stringify(registeredTemplates)
     );
@@ -87,5 +87,5 @@ function compileSync(conf = {}) {
 
 module.exports = {
   compile: compile,
-  compileSync: compileSync,
+  compileSync: compileSync
 };
