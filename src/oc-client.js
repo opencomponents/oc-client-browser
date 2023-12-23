@@ -569,6 +569,7 @@ var oc = oc || {};
                   );
                   callback(null, {
                     html: html,
+                    baseUrl: apiResponse.baseUrl,
                     key: apiResponse.template.key,
                     version: apiResponse.version,
                     name: apiResponse.name
