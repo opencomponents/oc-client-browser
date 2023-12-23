@@ -1,6 +1,6 @@
 {
   "name": "oc-client-browser",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "OC browser client",
   "main": "index.js",
   "types": "index.d.ts",

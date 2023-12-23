@@ -258,7 +258,10 @@ var oc = oc || {};
 
     if (data.name) {
       $component.attr('data-name', data.name);
-      oc.renderedComponents[data.name] = data.version;
+      oc.renderedComponents[data.name] = { version: data.version };
+      if (data.baseUrl) {
+        oc.renderedComponents[data.name].baseUrl = data.baseUrl;
+      }
       oc.events.fire('oc:rendered', data);
     }
 
@@ -275,6 +278,7 @@ var oc = oc || {};
     var data = {
       components: [
         {
+          action: options.action,
           name: options.name,
           version: options.version,
           parameters: oc.$.extend(
