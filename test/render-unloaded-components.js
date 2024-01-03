@@ -105,6 +105,13 @@ describe('oc-client : renderUnloadedComponents', function () {
         expect(eventData[1].name).toEqual('another-component');
         expect(eventData[1].version).toEqual('1.0.0');
       });
+
+      it('should include the raw html elements on the event payload', function () {
+        expect(eventData[0].element.innerHTML).toEqual('Hello world!');
+        expect(eventData[1].element.innerHTML).toEqual(
+          '<div>this is a component</div>'
+        );
+      });
     });
   });
 });
