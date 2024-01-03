@@ -262,6 +262,8 @@ var oc = oc || {};
       if (data.baseUrl) {
         oc.renderedComponents[data.name].baseUrl = data.baseUrl;
       }
+      // Get raw element from jQuery object
+      data.element = $component[0];
       oc.events.fire('oc:rendered', data);
     }
 
