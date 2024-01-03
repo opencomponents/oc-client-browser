@@ -17,6 +17,10 @@ declare const ocClient: {
     (cb: Callback<string>): void;
     (): Promise<string>;
   };
+  getLibs: {
+    (cb: Callback<{ dev: string; prod: string }>): void;
+    (): Promise<{ dev: string; prod: string }>;
+  };
   getMap: {
     (cb: Callback<string>): void;
     (): Promise<string>;

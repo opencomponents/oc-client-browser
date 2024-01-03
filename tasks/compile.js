@@ -61,7 +61,7 @@ function compileFiles(l, ocClient) {
   const licenseLink =
     'https://github.com/opencomponents/oc-client-browser/tree/master/LICENSES';
   const license = `/*! OpenComponents client v${version} | (c) 2015-${new Date().getFullYear()} OpenComponents community | ${licenseLink} */`;
-  const bundle = `${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
+  const bundle = `${license}\n${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
 
   const compressed = uglifyJs.minify(bundle, {
     sourceMap: {
@@ -72,7 +72,7 @@ function compileFiles(l, ocClient) {
 
   const compressedCode = `${license}\n${compressed.code}`;
 
-  return { code: compressedCode, map: compressed.map };
+  return { code: compressedCode, map: compressed.map, dev: bundle };
 }
 
 async function compile(conf = {}) {
