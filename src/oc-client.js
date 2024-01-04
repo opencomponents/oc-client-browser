@@ -244,8 +244,6 @@ var oc = oc || {};
   oc.requireSeries = asyncRequireForEach;
 
   var processHtml = function ($component, data, callback) {
-    data.id = Math.floor(Math.random() * 9999999999);
-
     $component.html(data.html);
     $component.attr('id', data.id);
     $component.attr('data-rendered', true);
@@ -554,6 +552,8 @@ var oc = oc || {};
           crossDomain: true,
           success: function (apiResponse) {
             if (apiResponse.renderMode === 'unrendered') {
+              const id = Math.floor(Math.random() * 9999999999);
+              apiResponse.data.id = id;
               oc.render(
                 apiResponse.template,
                 apiResponse.data,
@@ -570,6 +570,7 @@ var oc = oc || {};
                     MESSAGES_RENDERED.replace('{0}', apiResponse.template.src)
                   );
                   callback(null, {
+                    id: id,
                     html: html,
                     baseUrl: apiResponse.baseUrl,
                     key: apiResponse.template.key,
