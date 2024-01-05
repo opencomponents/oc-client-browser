@@ -268,7 +268,7 @@ var oc = oc || {};
     callback();
   };
 
-  oc.getData = function (options, cb) {
+  function getData(options, cb) {
     cb = cb || noop;
     isRequired('version', options.version);
     isRequired('baseUrl', options.baseUrl);
@@ -317,6 +317,35 @@ var oc = oc || {};
     }
 
     oc.$.ajax(ajaxOptions);
+  }
+  oc.getData = getData;
+  oc.getAction = function (options) {
+    return new Promise(function (resolve, reject) {
+      var renderedComponent = window.oc.renderedComponents[options.component],
+        baseUrl = options.baseUrl || renderedComponent.baseUrl,
+        version = options.version || renderedComponent.version;
+
+      getData(
+        {
+          action: options.action,
+          name: options.component,
+          version: version,
+          baseUrl: baseUrl,
+          parameters: options.parameters
+        },
+        function (err, data) {
+          if (err) {
+            return reject(err);
+          }
+          delete data.component.props._staticPath;
+          delete data.component.props._baseUrl;
+          delete data.component.props._componentName;
+          delete data.component.props._componentVersion;
+
+          resolve(data.component.props);
+        }
+      );
+    });
   };
 
   oc.build = function (options) {
@@ -552,7 +581,7 @@ var oc = oc || {};
           crossDomain: true,
           success: function (apiResponse) {
             if (apiResponse.renderMode === 'unrendered') {
-              const id = Math.floor(Math.random() * 9999999999);
+              var id = Math.floor(Math.random() * 9999999999);
               apiResponse.data.id = id;
               oc.render(
                 apiResponse.template,
