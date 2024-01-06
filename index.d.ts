@@ -1,9 +1,24 @@
 type Callback<T> = (err: NodeJS.ErrnoException | null, data: T) => void;
 
+interface TemplateRenderer {
+  getInfo: () => {
+    externals: Array<{
+      name: string;
+      global: string | string[];
+      url: string;
+      devUrl?: string;
+    }>;
+    type: string;
+    version: string;
+  };
+}
+
 type Template = {
   externals: Array<{ global: string | string[]; url: string }>;
 };
-type CompileOptions = { templates?: Record<string, Template> };
+type CompileOptions = {
+  templates?: Record<string, Template> | TemplateRenderer[];
+};
 type Compiled = { code: string; map: string };
 
 declare const ocClient: {

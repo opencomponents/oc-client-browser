@@ -28,8 +28,31 @@ const baseTemplates = {
   'oc-template-es6': { externals: [] }
 };
 
+function transformTemplates(templates = {}) {
+  if (Array.isArray(templates)) {
+    const templatesObj = {};
+    for (const template of templates) {
+      if (typeof template.getInfo !== 'function') {
+        throw new Error(
+          `Template ${
+            template.type || 'unknown'
+          } does not have a getInfo function`
+        );
+      }
+      const { externals, type } = template.getInfo();
+      templatesObj[type] = { externals };
+    }
+    return templatesObj;
+  }
+
+  return templates;
+}
+
 function getFiles({ sync = false, conf = {} }) {
-  const registeredTemplates = { ...baseTemplates, ...conf.templates };
+  const registeredTemplates = {
+    ...baseTemplates,
+    ...transformTemplates(conf.templates)
+  };
   const srcPath = '../src/';
   const vendorPath = '../vendor/';
 
