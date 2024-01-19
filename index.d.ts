@@ -19,7 +19,7 @@ type Template = {
 type CompileOptions = {
   templates?: Record<string, Template> | TemplateRenderer[];
 };
-type Compiled = { code: string; map: string };
+type Compiled = { code: string; map: string; dev: string };
 
 declare const ocClient: {
   compile: {
