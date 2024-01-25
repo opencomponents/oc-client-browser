@@ -327,6 +327,7 @@ var oc = oc || {};
 
       getData(
         {
+          json: true,
           action: options.action,
           name: options.component,
           version: version,
