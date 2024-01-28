@@ -630,7 +630,9 @@ var oc = oc || {};
               });
             }
           },
-          error: function () {
+          error: function (error) {
+            var status = error && error.status;
+            if (status === 429) retries[href] = 0;
             logger.error(MESSAGES_ERRORS_RETRIEVING);
             retry(
               href,
