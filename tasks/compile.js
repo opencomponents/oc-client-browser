@@ -59,10 +59,13 @@ function getFiles({ sync = false, conf = {} }) {
   const lPath = path.join(__dirname, vendorPath, 'l.js');
   const ocClientPath = path.join(__dirname, srcPath, 'oc-client.js');
   const replaceTemplates = x =>
-    x.replaceAll(
-      '__REGISTERED_TEMPLATES_PLACEHOLDER__',
-      JSON.stringify(registeredTemplates)
-    );
+    x
+      .replaceAll(
+        '__REGISTERED_TEMPLATES_PLACEHOLDER__',
+        JSON.stringify(registeredTemplates)
+      )
+      .replaceAll('__DEFAULT_RETRY_LIMIT__', conf.retryLimit || 30)
+      .replaceAll('__DEFAULT_RETRY_INTERVAL__', conf.retryInterval || 5000);
 
   if (sync) {
     const l = fs.readFileSync(lPath, 'utf-8');
