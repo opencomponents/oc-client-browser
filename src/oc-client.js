@@ -1,4 +1,4 @@
-/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__ */
+/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__ */
 /* eslint no-var: 'off' */
 /* eslint prefer-arrow-callback: 'off' */
 
@@ -44,8 +44,8 @@ var oc = oc || {};
       CDNJS_BASEURL +
       'jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js',
     JQUERY_URL = CDNJS_BASEURL + 'jquery/3.6.0/jquery.min.js',
-    RETRY_INTERVAL = oc.conf.retryInterval || 5000,
-    RETRY_LIMIT = oc.conf.retryLimit || 30,
+    RETRY_INTERVAL = oc.conf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
+    RETRY_LIMIT = oc.conf.retryLimit || __DEFAULT_RETRY_LIMIT__,
     RETRY_SEND_NUMBER = oc.conf.retrySendNumber || true,
     POLLING_INTERVAL = oc.conf.pollingInterval || 500,
     OC_TAG = oc.conf.tag || 'oc-component',

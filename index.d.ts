@@ -18,6 +18,8 @@ type Template = {
 };
 type CompileOptions = {
   templates?: Record<string, Template> | TemplateRenderer[];
+  retryInterval?: number;
+  retryLimit?: number;
 };
 type Compiled = { code: string; map: string; dev: string };
 
