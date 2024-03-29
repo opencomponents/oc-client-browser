@@ -46,7 +46,11 @@ describe('oc-client : getData', function () {
   describe('when providing the mandatory parameters', function () {
     describe('when requesting data', function () {
       it('should call the $.ajax method correctly', function (done) {
-        var spy = sinon.spy(oc.$, 'ajax');
+        var spy = sinon.stub(oc.$, 'ajax').callsFake(function (options) {
+          return options.success([
+            { response: { renderMode: 'unrendered', data: 'hello' } }
+          ]);
+        });
 
         execute(
           {
