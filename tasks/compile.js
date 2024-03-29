@@ -64,6 +64,7 @@ function getFiles({ sync = false, conf = {} }) {
         '__REGISTERED_TEMPLATES_PLACEHOLDER__',
         JSON.stringify(registeredTemplates)
       )
+      .replaceAll('__BEFORE_RENDER__', conf.beforeRender || '')
       .replaceAll('__DEFAULT_RETRY_LIMIT__', conf.retryLimit || 30)
       .replaceAll('__DEFAULT_RETRY_INTERVAL__', conf.retryInterval || 5000);
 

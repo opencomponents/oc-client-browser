@@ -16,11 +16,15 @@ interface TemplateRenderer {
 type Template = {
   externals: Array<{ global: string | string[]; url: string }>;
 };
-type CompileOptions = {
+interface CompileOptions {
   templates?: Record<string, Template> | TemplateRenderer[];
   retryInterval?: number;
   retryLimit?: number;
-};
+  /**
+   * JavaScript as a string code to be executed before rendering the templates
+   */
+  beforeRender?: string;
+}
 type Compiled = { code: string; map: string; dev: string };
 
 declare const ocClient: {
