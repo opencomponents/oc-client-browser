@@ -1,4 +1,4 @@
-/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__ */
+/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __BEFORE_RENDER__ */
 /* eslint no-var: 'off' */
 /* eslint prefer-arrow-callback: 'off' */
 
@@ -690,6 +690,8 @@ var oc = oc || {};
       }
     });
   };
+
+  __BEFORE_RENDER__;
 
   // render the components
   oc.ready(oc.renderUnloadedComponents);
