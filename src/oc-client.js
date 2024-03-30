@@ -1,4 +1,4 @@
-/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __BEFORE_RENDER__ */
+/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __EXTERNALS__ */
 /* eslint no-var: 'off' */
 /* eslint prefer-arrow-callback: 'off' */
 
@@ -100,7 +100,8 @@ var oc = oc || {};
     }
   };
 
-  var registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__;
+  var registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__,
+    externals = __EXTERNALS__;
 
   function registerTemplates(templates, overwrite) {
     templates = Array.isArray(templates) ? templates : [templates];
@@ -690,11 +691,12 @@ var oc = oc || {};
       }
     });
   };
-
-  __BEFORE_RENDER__;
-
   // render the components
-  oc.ready(oc.renderUnloadedComponents);
+  oc.ready(function () {
+    oc.requireSeries(externals, function () {
+      oc.renderUnloadedComponents();
+    });
+  });
 
   // expose public variables and methods
   exports = oc;
