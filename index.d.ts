@@ -1,29 +1,30 @@
 type Callback<T> = (err: NodeJS.ErrnoException | null, data: T) => void;
 
+interface External {
+  global: string | string[];
+  url: string;
+}
+interface ExtendedExternal extends External {
+  name: string;
+  devUrl?: string;
+}
+
 interface TemplateRenderer {
   getInfo: () => {
-    externals: Array<{
-      name: string;
-      global: string | string[];
-      url: string;
-      devUrl?: string;
-    }>;
+    externals: ExtendedExternal[];
     type: string;
     version: string;
   };
 }
 
 type Template = {
-  externals: Array<{ global: string | string[]; url: string }>;
+  externals: External[];
 };
 interface CompileOptions {
   templates?: Record<string, Template> | TemplateRenderer[];
   retryInterval?: number;
   retryLimit?: number;
-  /**
-   * JavaScript as a string code to be executed before rendering the templates
-   */
-  beforeRender?: string;
+  externals?: External[];
 }
 type Compiled = { code: string; map: string; dev: string };
 
