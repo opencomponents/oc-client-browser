@@ -449,13 +449,15 @@ var oc = oc || {};
       var wasDollarThereAlready = !!$window.$;
 
       oc.require('jQuery', JQUERY_URL, function (jQuery) {
-        requirePolyfills(jQuery, function () {
-          if (wasJqueryThereAlready || wasDollarThereAlready) {
-            oc.$ = jQuery;
-          } else {
-            oc.$ = jQuery.noConflict();
-          }
-          done();
+        oc.requireSeries(externals, function () {
+          requirePolyfills(jQuery, function () {
+            if (wasJqueryThereAlready || wasDollarThereAlready) {
+              oc.$ = jQuery;
+            } else {
+              oc.$ = jQuery.noConflict();
+            }
+            done();
+          });
         });
       });
     }
@@ -692,11 +694,7 @@ var oc = oc || {};
     });
   };
   // render the components
-  oc.ready(function () {
-    oc.requireSeries(externals, function () {
-      oc.renderUnloadedComponents();
-    });
-  });
+  oc.ready(oc.renderUnloadedComponents);
 
   // expose public variables and methods
   exports = oc;
