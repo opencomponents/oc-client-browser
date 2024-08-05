@@ -1,4 +1,4 @@
-/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __EXTERNALS__ */
+/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __EXTERNALS__ */
 /* eslint no-var: 'off' */
 /* eslint prefer-arrow-callback: 'off' */
 
@@ -46,6 +46,10 @@ var oc = oc || {};
     JQUERY_URL = CDNJS_BASEURL + 'jquery/3.6.0/jquery.min.js',
     RETRY_INTERVAL = oc.conf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
     RETRY_LIMIT = oc.conf.retryLimit || __DEFAULT_RETRY_LIMIT__,
+    DISABLE_LOADER =
+      typeof oc.conf.disableLoader === 'boolean'
+        ? oc.conf.disableLoader
+        : __DEFAULT_DISABLE_LOADER__,
     RETRY_SEND_NUMBER = oc.conf.retrySendNumber || true,
     POLLING_INTERVAL = oc.conf.pollingInterval || 500,
     OC_TAG = oc.conf.tag || 'oc-component',
@@ -533,9 +537,11 @@ var oc = oc || {};
       if (!isRendering && !isRendered) {
         logger.info(MESSAGES_RETRIEVING);
         $component.attr('data-rendering', true);
-        $component.html(
-          '<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + '</div>'
-        );
+        if (!DISABLE_LOADER) {
+          $component.html(
+            '<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + '</div>'
+          );
+        }
 
         oc.renderByHref($component.attr('href'), function (err, data) {
           if (err || !data) {
