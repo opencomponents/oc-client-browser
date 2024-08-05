@@ -24,6 +24,7 @@ interface CompileOptions {
   templates?: Record<string, Template> | TemplateRenderer[];
   retryInterval?: number;
   retryLimit?: number;
+  disableLoader?: boolean;
   externals?: External[];
 }
 type Compiled = { code: string; map: string; dev: string };
