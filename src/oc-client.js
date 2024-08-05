@@ -537,37 +537,47 @@ var oc = oc || {};
           '<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + '</div>'
         );
 
-        oc.renderByHref($component.attr('href'), function (err, data) {
-          if (err || !data) {
-            $component
-              .attr('data-rendering', 'false')
-              .attr('data-rendered', 'false')
-              .attr('data-failed', 'true')
-              .html('');
-            oc.events.fire('oc:failed', {
-              originalError: err,
-              data: data,
-              component: $component[0]
-            });
-            logger.error(err);
-            return callback();
-          }
+        oc.renderByHref(
+          { href: $component.attr('href'), id: $component.attr('id') },
+          function (err, data) {
+            if (err || !data) {
+              $component
+                .attr('data-rendering', 'false')
+                .attr('data-rendered', 'false')
+                .attr('data-failed', 'true')
+                .html('');
+              oc.events.fire('oc:failed', {
+                originalError: err,
+                data: data,
+                component: $component[0]
+              });
+              logger.error(err);
+              return callback();
+            }
 
-          processHtml($component, data, callback);
-        });
+            processHtml($component, data, callback);
+          }
+        );
       } else {
         setTimeout(callback, POLLING_INTERVAL);
       }
     });
   };
 
-  oc.renderByHref = function (href, retryNumberOrCallback, cb) {
+  oc.renderByHref = function (hrefOrOptions, retryNumberOrCallback, cb) {
     var callback = cb,
-      retryNumber = retryNumberOrCallback;
+      retryNumber = retryNumberOrCallback,
+      href = hrefOrOptions,
+      id = Math.floor(Math.random() * 9999999999);
 
     if (typeof retryNumberOrCallback === 'function') {
       callback = retryNumberOrCallback;
       retryNumber = 0;
+    }
+    if (typeof hrefOrOptions !== 'string') {
+      href = hrefOrOptions.href;
+      retryNumber = hrefOrOptions.retryNumber || retryNumber || 0;
+      id = hrefOrOptions.id || id;
     }
 
     oc.ready(function () {
@@ -585,7 +595,6 @@ var oc = oc || {};
           crossDomain: true,
           success: function (apiResponse) {
             if (apiResponse.renderMode === 'unrendered') {
-              var id = Math.floor(Math.random() * 9999999999);
               apiResponse.data.id = id;
               oc.render(
                 apiResponse.template,
