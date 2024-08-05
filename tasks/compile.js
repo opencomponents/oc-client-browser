@@ -67,7 +67,10 @@ function getFiles({ sync = false, conf = {} }) {
       .replaceAll('__EXTERNALS__', JSON.stringify(conf.externals || []))
       .replaceAll('__DEFAULT_RETRY_LIMIT__', conf.retryLimit || 30)
       .replaceAll('__DEFAULT_RETRY_INTERVAL__', conf.retryInterval || 5000)
-      .replaceAll('__DEFAULT_DISABLE_LOADER__', conf.disableLoader ?? false);
+      .replaceAll(
+        '__DEFAULT_DISABLE_LOADER__',
+        Boolean(conf.disableLoader ?? false)
+      );
 
   if (sync) {
     const l = fs.readFileSync(lPath, 'utf-8');
