@@ -237,7 +237,7 @@ var oc = oc || {};
       loaded = [];
     }
 
-    if (toLoad.length == 0) {
+    if (!toLoad.length) {
       return callback();
     }
 
@@ -486,10 +486,12 @@ var oc = oc || {};
               asyncRequireForEach(template.externals, function () {
                 if (type == 'oc-template-handlebars') {
                   try {
-                    var linked = $window.Handlebars.template(compiledView, []);
-                    callback(null, linked(model));
+                    callback(
+                      null,
+                      $window.Handlebars.template(compiledView, [])(model)
+                    );
                   } catch (e) {
-                    callback(e.toString());
+                    callback(String(e));
                   }
                 } else {
                   callback(null, compiledView(model));
