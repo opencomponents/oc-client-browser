@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { watch } from 'node:fs/promises';
 import path from 'node:path';
-import { styleText } from 'node:util';
+import { styleText, parseArgs } from 'node:util';
 import { compileSync } from './tasks/compile.js';
 
 const ac = new AbortController();
@@ -29,28 +29,51 @@ function getDiff() {
   return { result, diff, humanReadable };
 }
 
-(async () => {
-  try {
-    const watcher = watch(path.join(process.cwd(), 'src/oc-client.js'), {
-      signal
-    });
-    for await (const event of watcher) {
-      if (event.eventType === 'change') {
-        const { result, humanReadable } = getDiff();
-        let text = '';
-        if (result === 'same') {
-          text = 'No changes';
-        } else if (result === 'bigger') {
-          text = styleText('red', `Size increased by ${humanReadable}`);
-        } else {
-          text = styleText('green', `Size decreased by ${humanReadable}`);
-        }
-        console.clear();
-        console.log(text);
-      }
-    }
-  } catch (err) {
-    if (err.name === 'AbortError') return;
-    throw err;
+function getText() {
+  const { result, humanReadable } = getDiff();
+  let text = '';
+  if (result === 'same') {
+    text = 'No changes';
+  } else if (result === 'bigger') {
+    text = styleText('red', `Size increased by ${humanReadable}`);
+  } else {
+    text = styleText('green', `Size decreased by ${humanReadable}`);
   }
-})();
+
+  return text;
+}
+
+async function program(options) {
+  if (options.watch) {
+    try {
+      const watcher = watch(path.join(process.cwd(), 'src/oc-client.js'), {
+        signal
+      });
+      for await (const event of watcher) {
+        if (event.eventType === 'change') {
+          const text = getText();
+          console.clear();
+          console.log(text);
+        }
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      throw err;
+    }
+  } else {
+    console.log(getText());
+  }
+}
+
+const options = parseArgs({
+  args: process.argv.slice(2),
+  options: {
+    watch: {
+      type: 'boolean',
+      default: false,
+      short: 'w'
+    }
+  }
+});
+
+program(options.values);
