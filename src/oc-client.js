@@ -125,7 +125,7 @@ var oc = oc || {};
   }
 
   var retry = function (component, cb, failedRetryCb) {
-    if (retries[component] === undefined) {
+    if (retries[component] == undefined) {
       retries[component] = RETRY_LIMIT;
     }
 
@@ -311,7 +311,7 @@ var oc = oc || {};
       crossDomain: true,
       success: function (apiResponse) {
         var response = apiResponse[0].response;
-        if (response.renderMode === 'rendered') {
+        if (response.renderMode == 'rendered') {
           return cb(MESSAGES_ERRORS_GETTING_DATA);
         }
         var error = response.error ? response.details || response.error : null;
@@ -459,7 +459,7 @@ var oc = oc || {};
   oc.render = function (compiledViewInfo, model, callback) {
     oc.ready(function () {
       // TODO: integrate with oc-empty-response-handler module
-      if (model && model.__oc_emptyResponse === true) {
+      if (model && model.__oc_emptyResponse == true) {
         return callback(null, '');
       }
 
@@ -573,7 +573,7 @@ var oc = oc || {};
     }
 
     oc.ready(function () {
-      if (href !== '') {
+      if (href) {
         var extraParams = RETRY_SEND_NUMBER ? { __oc_Retry: retryNumber } : {};
         var finalisedHref = addParametersToHref(
           href,
@@ -586,7 +586,7 @@ var oc = oc || {};
           contentType: 'text/plain',
           crossDomain: true,
           success: function (apiResponse) {
-            if (apiResponse.renderMode === 'unrendered') {
+            if (apiResponse.renderMode == 'unrendered') {
               apiResponse.data.id = id;
               oc.render(
                 apiResponse.template,
@@ -616,7 +616,7 @@ var oc = oc || {};
                   });
                 }
               );
-            } else if (apiResponse.renderMode === 'rendered') {
+            } else if (apiResponse.renderMode == 'rendered') {
               logger.info(
                 MESSAGES_RENDERED.replace(firstPlaceholder, apiResponse.href)
               );
@@ -641,7 +641,7 @@ var oc = oc || {};
           },
           error: function (error) {
             var status = error && error.status;
-            if (status === 429) retries[href] = 0;
+            if (status == 429) retries[href] = 0;
             logger.error(MESSAGES_ERRORS_RETRIEVING);
             retry(
               href,

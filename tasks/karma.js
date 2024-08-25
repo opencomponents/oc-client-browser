@@ -41,12 +41,6 @@ const customLaunchers = {
     platform: 'Windows 8',
     version: '10'
   },
-  ie9: {
-    base: 'SauceLabs',
-    browserName: 'internet explorer',
-    platform: 'Windows 7',
-    version: '9'
-  },
   safari: {
     base: 'SauceLabs',
     browserName: 'Safari',
@@ -86,12 +80,8 @@ module.exports = {
     browsers: ['chrome', 'ff', 'android']
   },
   'sauce-windows': {
-    customLaunchers: _.pick(customLaunchers, 'edge14', 'ie11', 'ie10', 'ie9'),
-    browsers: ['edge14', 'ie11', 'ie10', 'ie9']
-  },
-  'sauce-ie9': {
-    customLaunchers: _.pick(customLaunchers, 'ie9'),
-    browsers: ['ie9']
+    customLaunchers: _.pick(customLaunchers, 'edge14', 'ie11'),
+    browsers: ['edge14', 'ie11']
   },
   'sauce-osx': {
     customLaunchers: _.pick(customLaunchers, 'safari', 'iphone', 'ipad'),
