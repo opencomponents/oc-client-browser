@@ -56,6 +56,7 @@ var oc = oc || {};
     isFunction = function (a) {
       return typeof a == 'function';
     },
+    timeout = setTimeout,
     ocCmd = oc.cmd,
     ocConf = oc.conf,
     renderedComponents = oc.renderedComponents,
@@ -133,7 +134,7 @@ var oc = oc || {};
       return failedRetryCb();
     }
 
-    setTimeout(function () {
+    timeout(function () {
       cb(RETRY_LIMIT - retries[component] + 1);
     }, RETRY_INTERVAL);
     retries[component]--;
@@ -551,7 +552,7 @@ var oc = oc || {};
           }
         );
       } else {
-        setTimeout(callback, POLLING_INTERVAL);
+        timeout(callback, POLLING_INTERVAL);
       }
     });
   };
