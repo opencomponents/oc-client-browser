@@ -47,8 +47,6 @@ var oc = oc || {};
   // The code
   var $,
     noop = function () {},
-    nav = $window.navigator.userAgent,
-    is9 = !!nav.match(/MSIE 9/),
     initialised = false,
     initialising = false,
     retries = {},
@@ -78,11 +76,8 @@ var oc = oc || {};
   };
 
   // constants
-  var CDNJS_BASEURL = 'https://cdnjs.cloudflare.com/ajax/libs/',
-    IE9_AJAX_POLYFILL_URL =
-      CDNJS_BASEURL +
-      'jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js',
-    JQUERY_URL = CDNJS_BASEURL + 'jquery/3.6.0/jquery.min.js',
+  var JQUERY_URL =
+      'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js',
     RETRY_INTERVAL = ocConf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
     RETRY_LIMIT = ocConf.retryLimit || __DEFAULT_RETRY_LIMIT__,
     DISABLE_LOADER = isBool(ocConf.disableLoader)
@@ -412,14 +407,6 @@ var oc = oc || {};
     } else {
       initialising = true;
 
-      var requirePolyfills = function ($, cb) {
-        if (is9 && !$.IE_POLYFILL_LOADED) {
-          oc.require(IE9_AJAX_POLYFILL_URL, cb);
-        } else {
-          cb();
-        }
-      };
-
       var done = function () {
         initialised = true;
         initialising = false;
@@ -458,14 +445,12 @@ var oc = oc || {};
 
       oc.require('jQuery', JQUERY_URL, function (jQuery) {
         oc.requireSeries(externals, function () {
-          requirePolyfills(jQuery, function () {
-            if (wasJqueryThereAlready || wasDollarThereAlready) {
-              $ = oc.$ = jQuery;
-            } else {
-              $ = oc.$ = jQuery.noConflict();
-            }
-            done();
-          });
+          if (wasJqueryThereAlready || wasDollarThereAlready) {
+            $ = oc.$ = jQuery;
+          } else {
+            $ = oc.$ = jQuery.noConflict();
+          }
+          done();
         });
       });
     }
