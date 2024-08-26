@@ -136,7 +136,7 @@ var oc = oc || {};
   };
 
   var addParametersToHref = function (href, parameters) {
-    return href + ~href.indexOf('?') ? '&' : '?' + $.param(parameters);
+    return href + (~href.indexOf('?') ? '&' : '?') + $.param(parameters);
   };
 
   var getHeaders = function () {
@@ -301,8 +301,8 @@ var oc = oc || {};
         if (response.renderMode == 'rendered') {
           return cb(MESSAGES_ERRORS_GETTING_DATA);
         }
-        var error = response.error ? response.details || response.error : null;
-        return cb(error, response.data, apiResponse[0]);
+        var err = response.error ? response.details || response.error : null;
+        return cb(err, response.data, apiResponse[0]);
       },
       error: cb
     };
@@ -627,8 +627,8 @@ var oc = oc || {};
               });
             }
           },
-          error: function (error) {
-            if (error && error.status == 429) retries[href] = 0;
+          error: function (err) {
+            if (err && err.status == 429) retries[href] = 0;
             error(MESSAGES_ERRORS_RETRIEVING);
             retry(
               href,
