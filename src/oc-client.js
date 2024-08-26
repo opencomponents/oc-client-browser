@@ -63,18 +63,13 @@ var oc = oc || {};
     firstPlaceholder = '{0}',
     secondPlaceholder = '{1}',
     dataRenderedAttribute = 'data-rendered',
-    dataRenderingAttribute = 'data-rendering';
-
-  var logger = {
-    error: function (msg) {
-      // eslint-disable-next-line no-console
-      return console.log(msg);
+    dataRenderingAttribute = 'data-rendering',
+    error = function (msg) {
+      console.log(msg);
     },
-    info: function (msg) {
-      // eslint-disable-next-line no-console
-      return ocConf.debug ? console.log(msg) : false;
-    }
-  };
+    info = function (msg) {
+      ocConf.debug && console.log(msg);
+    };
 
   // constants
   var JQUERY_URL =
@@ -141,16 +136,7 @@ var oc = oc || {};
   };
 
   var addParametersToHref = function (href, parameters) {
-    if (href && parameters) {
-      var param = $.param(parameters);
-      if (href.indexOf('?') > -1) {
-        return href + '&' + param;
-      } else {
-        return href + '?' + param;
-      }
-    }
-
-    return href;
+    return href + ~href.indexOf('?') ? '&' : '?' + $.param(parameters);
   };
 
   var getHeaders = function () {
@@ -318,9 +304,7 @@ var oc = oc || {};
         var error = response.error ? response.details || response.error : null;
         return cb(error, response.data, apiResponse[0]);
       },
-      error: function (err) {
-        return cb(err);
-      }
+      error: cb
     };
     if (jsonRequest) {
       ajaxOptions.dataType = 'json';
@@ -491,7 +475,7 @@ var oc = oc || {};
                       $window.Handlebars.template(compiledView, [])(model)
                     );
                   } catch (e) {
-                    callback(String(e));
+                    callback('' + e);
                   }
                 } else {
                   callback(null, compiledView(model));
@@ -525,7 +509,7 @@ var oc = oc || {};
           : dataRendered == 'true';
 
       if (!isRendering && !isRendered) {
-        logger.info(MESSAGES_RETRIEVING);
+        info(MESSAGES_RETRIEVING);
         attr(dataRenderingAttribute, true);
         if (!DISABLE_LOADER) {
           $component.html(
@@ -537,16 +521,16 @@ var oc = oc || {};
           { href: attr('href'), id: attr('id') },
           function (err, data) {
             if (err || !data) {
-              attr(dataRenderingAttribute, 'false');
-              attr(dataRenderedAttribute, 'false');
-              attr('data-failed', 'true');
+              attr(dataRenderingAttribute, false);
+              attr(dataRenderedAttribute, false);
+              attr('data-failed', true);
               $component.html('');
               oc.events.fire('oc:failed', {
                 originalError: err,
                 data: data,
                 component: $component[0]
               });
-              logger.error(err);
+              error(err);
               return callback();
             }
 
@@ -577,14 +561,15 @@ var oc = oc || {};
 
     oc.ready(function () {
       if (href) {
-        var extraParams = RETRY_SEND_NUMBER ? { __oc_Retry: retryNumber } : {};
-        var finalisedHref = addParametersToHref(
-          href,
-          $.extend({}, ocConf.globalParameters, extraParams)
-        );
-
         $.ajax({
-          url: finalisedHref,
+          url: addParametersToHref(
+            href,
+            $.extend(
+              {},
+              ocConf.globalParameters,
+              RETRY_SEND_NUMBER && { __oc_Retry: retryNumber }
+            )
+          ),
           headers: getHeaders(),
           contentType: 'text/plain',
           crossDomain: true,
@@ -603,7 +588,7 @@ var oc = oc || {};
                       ).replace(secondPlaceholder, err)
                     );
                   }
-                  logger.info(
+                  info(
                     MESSAGES_RENDERED.replace(
                       firstPlaceholder,
                       apiResponse.template.src
@@ -620,7 +605,7 @@ var oc = oc || {};
                 }
               );
             } else if (apiResponse.renderMode == 'rendered') {
-              logger.info(
+              info(
                 MESSAGES_RENDERED.replace(firstPlaceholder, apiResponse.href)
               );
 
@@ -643,9 +628,8 @@ var oc = oc || {};
             }
           },
           error: function (error) {
-            var status = error && error.status;
-            if (status == 429) retries[href] = 0;
-            logger.error(MESSAGES_ERRORS_RETRIEVING);
+            if (error && error.status == 429) retries[href] = 0;
+            error(MESSAGES_ERRORS_RETRIEVING);
             retry(
               href,
               function (requestNumber) {
