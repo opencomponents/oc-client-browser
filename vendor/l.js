@@ -34,6 +34,11 @@
     onreadystatechange = 'onreadystatechange',
     scriptStr = 'script',
     header = D[getElementsByTagName]('head')[0] || D.documentElement,
+    // aliases = {},
+    //-- get the current script tag for further evaluation of it's eventual content
+    // scripts = D[getElementsByTagName](scriptStr),
+    // scriptTag = scripts[scripts[length] - 1],
+    // script = scriptTag.innerHTML.replace(/^\s+|\s+$/g, ''),
     appendElmt = function (type, attrs, cb) {
       var e = D.createElement(type),
         i;
@@ -58,6 +63,7 @@
     };
   //avoid multiple inclusion to override current loader but allow tag content evaluation
   if (!window.ljs) {
+    // var checkLoaded = scriptTag.src.match(/checkLoaded/) ? 1 : 0,
     //-- keep trace of header as we will make multiple access to it
     var urlParse = function (url) {
         var parts = {}; // u => url, i => id, f => fallback, m => is a module
@@ -71,6 +77,12 @@
         return parts;
       },
       load = function (loader, url, cb) {
+        // if (aliases && aliases[url]) {
+        //   var args = aliases[url].slice(0);
+        //   isA(args) || (args = [args]);
+        //   cb && args.push(cb);
+        //   return loader.load.apply(loader, args);
+        // }
         if (isA(url)) {
           // parallelized request
           for (var l = url[length]; l--; ) {
@@ -87,6 +99,7 @@
       loaded = {}, // will handle already loaded urls
       errorHandlers = [],
       loader = {
+        // aliases: aliases,
         loadjs: function (url, cb) {
           var parts = urlParse(url);
           var onError = function (url) {
@@ -183,13 +196,33 @@
           );
           return loader;
         },
+        // addAliases: function (_aliases) {
+        //   for (var i in _aliases) {
+        //     aliases[i] = isA(_aliases[i]) ? _aliases[i].slice(0) : _aliases[i];
+        //   }
+        //   return loader;
+        // },
         onError: function (cb) {
           errorHandlers.push(cb);
           return loader;
         }
       };
+    // if (checkLoaded) {
+    //   var i, l, links, url;
+    //   for (i = 0, l = scripts[length]; i < l; i++) {
+    //     (url = scripts[i].getAttribute('src')) &&
+    //       (loaded[url.replace(/#.*$/, '')] = true);
+    //   }
+    //   links = D[getElementsByTagName]('link');
+    //   for (i = 0, l = links[length]; i < l; i++) {
+    //     (links[i].rel === 'stylesheet' || links[i].type === 'text/css') &&
+    //       (loaded[links[i].getAttribute('href').replace(/#.*$/, '')] = true);
+    //   }
+    // }
     //export ljs
     window.ljs = loader;
     // eval inside tag code if any
   }
+  // eval script tag content if needed
+  // scriptTag.src && script && appendElmt(scriptStr, { innerHTML: script });
 })(window);
