@@ -47,8 +47,6 @@ var oc = oc || {};
   // The code
   var $,
     noop = function () {},
-    nav = $window.navigator.userAgent,
-    is9 = !!nav.match(/MSIE 9/),
     initialised = false,
     initialising = false,
     retries = {},
@@ -58,31 +56,24 @@ var oc = oc || {};
     isFunction = function (a) {
       return typeof a == 'function';
     },
+    timeout = setTimeout,
     ocCmd = oc.cmd,
     ocConf = oc.conf,
     renderedComponents = oc.renderedComponents,
     firstPlaceholder = '{0}',
     secondPlaceholder = '{1}',
     dataRenderedAttribute = 'data-rendered',
-    dataRenderingAttribute = 'data-rendering';
-
-  var logger = {
-    error: function (msg) {
-      // eslint-disable-next-line no-console
-      return console.log(msg);
+    dataRenderingAttribute = 'data-rendering',
+    error = function (msg) {
+      console.log(msg);
     },
-    info: function (msg) {
-      // eslint-disable-next-line no-console
-      return ocConf.debug ? console.log(msg) : false;
-    }
-  };
+    info = function (msg) {
+      ocConf.debug && console.log(msg);
+    };
 
   // constants
-  var CDNJS_BASEURL = 'https://cdnjs.cloudflare.com/ajax/libs/',
-    IE9_AJAX_POLYFILL_URL =
-      CDNJS_BASEURL +
-      'jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js',
-    JQUERY_URL = CDNJS_BASEURL + 'jquery/3.6.0/jquery.min.js',
+  var JQUERY_URL =
+      'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js',
     RETRY_INTERVAL = ocConf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
     RETRY_LIMIT = ocConf.retryLimit || __DEFAULT_RETRY_LIMIT__,
     DISABLE_LOADER = isBool(ocConf.disableLoader)
@@ -130,7 +121,7 @@ var oc = oc || {};
   }
 
   var retry = function (component, cb, failedRetryCb) {
-    if (retries[component] === undefined) {
+    if (retries[component] == undefined) {
       retries[component] = RETRY_LIMIT;
     }
 
@@ -138,23 +129,14 @@ var oc = oc || {};
       return failedRetryCb();
     }
 
-    setTimeout(function () {
+    timeout(function () {
       cb(RETRY_LIMIT - retries[component] + 1);
     }, RETRY_INTERVAL);
     retries[component]--;
   };
 
   var addParametersToHref = function (href, parameters) {
-    if (href && parameters) {
-      var param = $.param(parameters);
-      if (href.indexOf('?') > -1) {
-        return href + '&' + param;
-      } else {
-        return href + '?' + param;
-      }
-    }
-
-    return href;
+    return href + (~href.indexOf('?') ? '&' : '?') + $.param(parameters);
   };
 
   var getHeaders = function () {
@@ -241,7 +223,7 @@ var oc = oc || {};
       loaded = [];
     }
 
-    if (toLoad.length == 0) {
+    if (!toLoad.length) {
       return callback();
     }
 
@@ -316,15 +298,13 @@ var oc = oc || {};
       crossDomain: true,
       success: function (apiResponse) {
         var response = apiResponse[0].response;
-        if (response.renderMode === 'rendered') {
+        if (response.renderMode == 'rendered') {
           return cb(MESSAGES_ERRORS_GETTING_DATA);
         }
-        var error = response.error ? response.details || response.error : null;
-        return cb(error, response.data, apiResponse[0]);
+        var err = response.error ? response.details || response.error : null;
+        return cb(err, response.data, apiResponse[0]);
       },
-      error: function (err) {
-        return cb(err);
-      }
+      error: cb
     };
     if (jsonRequest) {
       ajaxOptions.dataType = 'json';
@@ -412,14 +392,6 @@ var oc = oc || {};
     } else {
       initialising = true;
 
-      var requirePolyfills = function ($, cb) {
-        if (is9 && !$.IE_POLYFILL_LOADED) {
-          oc.require(IE9_AJAX_POLYFILL_URL, cb);
-        } else {
-          cb();
-        }
-      };
-
       var done = function () {
         initialised = true;
         initialising = false;
@@ -458,14 +430,12 @@ var oc = oc || {};
 
       oc.require('jQuery', JQUERY_URL, function (jQuery) {
         oc.requireSeries(externals, function () {
-          requirePolyfills(jQuery, function () {
-            if (wasJqueryThereAlready || wasDollarThereAlready) {
-              $ = oc.$ = jQuery;
-            } else {
-              $ = oc.$ = jQuery.noConflict();
-            }
-            done();
-          });
+          if (wasJqueryThereAlready || wasDollarThereAlready) {
+            $ = oc.$ = jQuery;
+          } else {
+            $ = oc.$ = jQuery.noConflict();
+          }
+          done();
         });
       });
     }
@@ -474,7 +444,7 @@ var oc = oc || {};
   oc.render = function (compiledViewInfo, model, callback) {
     oc.ready(function () {
       // TODO: integrate with oc-empty-response-handler module
-      if (model && model.__oc_emptyResponse === true) {
+      if (model && model.__oc_emptyResponse == true) {
         return callback(null, '');
       }
 
@@ -500,10 +470,12 @@ var oc = oc || {};
               asyncRequireForEach(template.externals, function () {
                 if (type == 'oc-template-handlebars') {
                   try {
-                    var linked = $window.Handlebars.template(compiledView, []);
-                    callback(null, linked(model));
+                    callback(
+                      null,
+                      $window.Handlebars.template(compiledView, [])(model)
+                    );
                   } catch (e) {
-                    callback(e.toString());
+                    callback('' + e);
                   }
                 } else {
                   callback(null, compiledView(model));
@@ -537,7 +509,7 @@ var oc = oc || {};
           : dataRendered == 'true';
 
       if (!isRendering && !isRendered) {
-        logger.info(MESSAGES_RETRIEVING);
+        info(MESSAGES_RETRIEVING);
         attr(dataRenderingAttribute, true);
         if (!DISABLE_LOADER) {
           $component.html(
@@ -549,16 +521,16 @@ var oc = oc || {};
           { href: attr('href'), id: attr('id') },
           function (err, data) {
             if (err || !data) {
-              attr(dataRenderingAttribute, 'false');
-              attr(dataRenderedAttribute, 'false');
-              attr('data-failed', 'true');
+              attr(dataRenderingAttribute, false);
+              attr(dataRenderedAttribute, false);
+              attr('data-failed', true);
               $component.html('');
               oc.events.fire('oc:failed', {
                 originalError: err,
                 data: data,
                 component: $component[0]
               });
-              logger.error(err);
+              error(err);
               return callback();
             }
 
@@ -566,7 +538,7 @@ var oc = oc || {};
           }
         );
       } else {
-        setTimeout(callback, POLLING_INTERVAL);
+        timeout(callback, POLLING_INTERVAL);
       }
     });
   };
@@ -588,20 +560,21 @@ var oc = oc || {};
     }
 
     oc.ready(function () {
-      if (href !== '') {
-        var extraParams = RETRY_SEND_NUMBER ? { __oc_Retry: retryNumber } : {};
-        var finalisedHref = addParametersToHref(
-          href,
-          $.extend({}, ocConf.globalParameters, extraParams)
-        );
-
+      if (href) {
         $.ajax({
-          url: finalisedHref,
+          url: addParametersToHref(
+            href,
+            $.extend(
+              {},
+              ocConf.globalParameters,
+              RETRY_SEND_NUMBER && { __oc_Retry: retryNumber }
+            )
+          ),
           headers: getHeaders(),
           contentType: 'text/plain',
           crossDomain: true,
           success: function (apiResponse) {
-            if (apiResponse.renderMode === 'unrendered') {
+            if (apiResponse.renderMode == 'unrendered') {
               apiResponse.data.id = id;
               oc.render(
                 apiResponse.template,
@@ -615,7 +588,7 @@ var oc = oc || {};
                       ).replace(secondPlaceholder, err)
                     );
                   }
-                  logger.info(
+                  info(
                     MESSAGES_RENDERED.replace(
                       firstPlaceholder,
                       apiResponse.template.src
@@ -631,8 +604,8 @@ var oc = oc || {};
                   });
                 }
               );
-            } else if (apiResponse.renderMode === 'rendered') {
-              logger.info(
+            } else if (apiResponse.renderMode == 'rendered') {
+              info(
                 MESSAGES_RENDERED.replace(firstPlaceholder, apiResponse.href)
               );
 
@@ -654,10 +627,9 @@ var oc = oc || {};
               });
             }
           },
-          error: function (error) {
-            var status = error && error.status;
-            if (status === 429) retries[href] = 0;
-            logger.error(MESSAGES_ERRORS_RETRIEVING);
+          error: function (err) {
+            if (err && err.status == 429) retries[href] = 0;
+            error(MESSAGES_ERRORS_RETRIEVING);
             retry(
               href,
               function (requestNumber) {
