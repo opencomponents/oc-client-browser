@@ -7,37 +7,46 @@ import { compileSync } from './tasks/compile.js';
 const ac = new AbortController();
 const { signal } = ac;
 
+// const initialSize = 10403;
+
 function getSize() {
   const { code } = compileSync();
   return code.length;
 }
+
+function humanReadableSize(size) {
+  const absSize = Math.abs(size);
+  if (absSize > 1024) {
+    return `${(size / 1024).toFixed(2)} KB`;
+  } else if (absSize >= 1) {
+    return `${size} B`;
+  }
+  return '';
+}
+
 const originalSize = readFileSync('./dist/oc-client.min.js').length;
-function getDiff() {
+function getDiff(compareTo) {
   const newSize = getSize();
-  const diff = newSize - originalSize;
+  const diff = newSize - compareTo;
   const result = diff > 0 ? 'bigger' : diff < 0 ? 'smaller' : 'same';
-  const humanReadable = (() => {
-    const absDiff = Math.abs(diff);
-    if (absDiff > 1024) {
-      return `${(diff / 1024).toFixed(2)} KB`;
-    } else if (absDiff >= 1) {
-      return `${diff} B`;
-    }
-    return '';
-  })();
+  const humanReadable = humanReadableSize(diff);
 
   return { result, diff, humanReadable };
 }
 
-function getText() {
-  const { result, humanReadable } = getDiff();
+function getText(initial) {
+  const { result, humanReadable } = getDiff(originalSize);
   let text = '';
   if (result === 'same') {
     text = 'No changes';
   } else if (result === 'bigger') {
-    text = styleText('red', `Size increased by ${humanReadable}`);
+    text = styleText('red', `Current size increased by ${humanReadable}`);
   } else {
-    text = styleText('green', `Size decreased by ${humanReadable}`);
+    text = styleText('green', `Current size decreased by ${humanReadable}`);
+  }
+
+  if (initial) {
+    text += `\nTotal reduction: ${getDiff(initial).humanReadable}`;
   }
 
   return text;
@@ -51,7 +60,7 @@ async function program(options) {
       });
       for await (const event of watcher) {
         if (event.eventType === 'change') {
-          const text = getText();
+          const text = getText(options.initial);
           console.clear();
           console.log(text);
         }
@@ -72,6 +81,10 @@ const options = parseArgs({
       type: 'boolean',
       default: false,
       short: 'w'
+    },
+    initial: {
+      type: 'string',
+      short: 'i'
     }
   }
 });

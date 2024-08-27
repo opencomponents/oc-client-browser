@@ -29,14 +29,12 @@ var oc = oc || {};
   oc.conf = oc.conf || {};
   oc.cmd = oc.cmd || [];
   oc.renderedComponents = oc.renderedComponents || {};
-  oc.status = oc.status || false;
 
   // If oc client is already inside the page, we do nothing.
   if (oc.status) {
     return oc;
-  } else {
-    oc.status = 'loading';
   }
+  oc.status = 'loading';
 
   var isRequired = function (name, value) {
     if (!value) {
@@ -60,8 +58,6 @@ var oc = oc || {};
     ocCmd = oc.cmd,
     ocConf = oc.conf,
     renderedComponents = oc.renderedComponents,
-    firstPlaceholder = '{0}',
-    secondPlaceholder = '{1}',
     dataRenderedAttribute = 'data-rendered',
     dataRenderingAttribute = 'data-rendering',
     error = function (msg) {
@@ -85,35 +81,36 @@ var oc = oc || {};
     JSON_REQUESTS = !!ocConf.jsonRequests,
     MESSAGES_ERRORS_HREF_MISSING = 'Href parameter missing',
     MESSAGES_ERRORS_RETRY_FAILED =
-      'Failed to load {0} component ' + RETRY_LIMIT + ' times. Giving up',
-    MESSAGES_ERRORS_LOADING_COMPILED_VIEW = 'Error getting compiled view: {0}',
+      'Failed to load $0 component ' + RETRY_LIMIT + ' times. Giving up',
+    MESSAGES_ERRORS_LOADING_COMPILED_VIEW = 'Error getting compiled view: $0',
     MESSAGES_ERRORS_GETTING_DATA = 'Error getting data',
-    MESSAGES_ERRORS_RENDERING = 'Error rendering component: {0}, error: {1}',
+    MESSAGES_ERRORS_RENDERING = 'Error rendering component: $1, error: $0',
     MESSAGES_ERRORS_RETRIEVING =
       'Failed to retrieve the component. Retrying in ' +
       RETRY_INTERVAL / 1000 +
       ' seconds...',
     MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED =
-      'Error loading component: view engine "{0}" not supported',
+      'Error loading component: view engine "$0" not supported',
     MESSAGES_LOADING_COMPONENT = ocConf.loadingMessage || '',
-    MESSAGES_RENDERED = "Component '{0}' correctly rendered",
+    MESSAGES_RENDERED = "Component '$0' correctly rendered",
     MESSAGES_RETRIEVING =
-      'Unrendered component found. Trying to retrieve it...';
+      'Unrendered component found. Trying to retrieve it...',
+    interpolate = function (str, value, value2) {
+      return str.replace('$0', value).replace('$1', value2);
+    };
 
   var registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__,
     externals = __EXTERNALS__;
 
   function registerTemplates(templates, overwrite) {
     templates = Array.isArray(templates) ? templates : [templates];
-    for (var i in templates) {
-      var template = templates[i],
-        type = template.type;
-      if (overwrite || !registeredTemplates[type]) {
-        registeredTemplates[type] = {
+    templates.map(function (template) {
+      if (overwrite || !registeredTemplates[template.type]) {
+        registeredTemplates[template.type] = {
           externals: template.externals
         };
       }
-    }
+    });
   }
 
   if (ocConf.templates) {
@@ -126,13 +123,13 @@ var oc = oc || {};
     }
 
     if (retries[component] <= 0) {
-      return failedRetryCb();
+      failedRetryCb();
+    } else {
+      timeout(function () {
+        cb(RETRY_LIMIT - retries[component] + 1);
+      }, RETRY_INTERVAL);
+      retries[component]--;
     }
-
-    timeout(function () {
-      cb(RETRY_LIMIT - retries[component] + 1);
-    }, RETRY_INTERVAL);
-    retries[component]--;
   };
 
   var addParametersToHref = function (href, parameters) {
@@ -140,13 +137,11 @@ var oc = oc || {};
   };
 
   var getHeaders = function () {
-    var globalHeaders = isFunction(ocConf.globalHeaders)
-      ? ocConf.globalHeaders()
-      : ocConf.globalHeaders;
-
     return $.extend(
       { Accept: 'application/vnd.oc.unrendered+json' },
-      globalHeaders
+      isFunction(ocConf.globalHeaders)
+        ? ocConf.globalHeaders()
+        : ocConf.globalHeaders
     );
   };
 
@@ -154,9 +149,13 @@ var oc = oc || {};
     $('<style>' + styles + '</style>').appendTo($document.head);
   };
 
+  function loadAfterReady() {
+    oc.ready(oc.renderUnloadedComponents);
+  }
+
   oc.registerTemplates = function (templates) {
     registerTemplates(templates);
-    oc.ready(oc.renderUnloadedComponents);
+    loadAfterReady();
     return registeredTemplates;
   };
 
@@ -172,31 +171,14 @@ var oc = oc || {};
       nameSpace = [nameSpace];
     }
 
-    var needsToBeLoaded = function () {
-      var base = $window;
-
-      if (nameSpace == undefined) {
-        return true;
-      }
-
-      for (var i = 0; i < nameSpace.length; i++) {
-        base = base[nameSpace[i]];
-        if (!base) {
-          return true;
-        }
-      }
-
-      return false;
-    };
-
     var getObj = function () {
       var base = $window;
 
-      if (typeof nameSpace == 'undefined') {
+      if (nameSpace == undefined) {
         return undefined;
       }
 
-      for (var i = 0; i < nameSpace.length; i++) {
+      for (var i in nameSpace) {
         base = base[nameSpace[i]];
         if (!base) {
           return undefined;
@@ -210,7 +192,7 @@ var oc = oc || {};
       callback(getObj());
     };
 
-    if (needsToBeLoaded()) {
+    if (!getObj()) {
       ljs.load(url, cbGetObj);
     } else {
       cbGetObj();
@@ -224,16 +206,13 @@ var oc = oc || {};
     }
 
     if (!toLoad.length) {
-      return callback();
+      callback();
+    } else {
+      var loading = toLoad[0];
+      oc.require(loading.global, loading.url, function () {
+        asyncRequireForEach(toLoad.slice(1), loaded.concat(loading), callback);
+      });
     }
-
-    var loading = toLoad[0];
-    oc.require(loading.global, loading.url, function () {
-      var justLoaded = loading;
-      var nowLoaded = loaded.concat(justLoaded);
-      var remainToLoad = toLoad.slice(1);
-      asyncRequireForEach(remainToLoad, nowLoaded, callback);
-    });
   };
 
   oc.requireSeries = asyncRequireForEach;
@@ -302,7 +281,7 @@ var oc = oc || {};
           return cb(MESSAGES_ERRORS_GETTING_DATA);
         }
         var err = response.error ? response.details || response.error : null;
-        return cb(err, response.data, apiResponse[0]);
+        cb(err, response.data, apiResponse[0]);
       },
       error: cb
     };
@@ -315,30 +294,29 @@ var oc = oc || {};
   oc.getData = getData;
   oc.getAction = function (options) {
     return new Promise(function (resolve, reject) {
-      var renderedComponent = renderedComponents[options.component],
-        baseUrl = options.baseUrl || renderedComponent.baseUrl,
-        version = options.version || renderedComponent.version;
-
+      var name = options.component;
       getData(
-        {
-          json: true,
-          action: options.action,
-          name: options.component,
-          version: version,
-          baseUrl: baseUrl,
-          parameters: options.parameters
-        },
+        $.extend(
+          {
+            json: true,
+            name: name
+          },
+          renderedComponents[name],
+          options
+        ),
+
         function (err, data) {
           if (err) {
-            return reject(err);
-          }
-          var props = data.component.props;
-          delete props._staticPath;
-          delete props._baseUrl;
-          delete props._componentName;
-          delete props._componentVersion;
+            reject(err);
+          } else {
+            var props = data.component.props;
+            delete props._staticPath;
+            delete props._baseUrl;
+            delete props._componentName;
+            delete props._componentVersion;
 
-          resolve(props);
+            resolve(props);
+          }
         }
       );
     });
@@ -349,13 +327,7 @@ var oc = oc || {};
     isRequired('name', options.name);
 
     var withFinalSlash = function (s) {
-      s = s || '';
-
-      if (s.slice(-1) != '/') {
-        s += '/';
-      }
-
-      return s;
+      return s.match(/\/$/) ? s : s + '/';
     };
 
     var href = withFinalSlash(options.baseUrl) + withFinalSlash(options.name);
@@ -382,11 +354,9 @@ var oc = oc || {};
     return '<' + OC_TAG + ' href="' + href + '"></' + OC_TAG + '>';
   };
 
-  oc.events = {};
-
   oc.ready = function (callback) {
     if (initialised) {
-      return callback();
+      callback();
     } else if (initialising) {
       ocCmd.push(callback);
     } else {
@@ -414,9 +384,9 @@ var oc = oc || {};
         oc.events.fire('oc:ready', oc);
         oc.status = 'ready';
 
-        for (var i = 0; i < ocCmd.length; i++) {
-          ocCmd[i](oc);
-        }
+        ocCmd.map(function (cmd) {
+          cmd(oc);
+        });
 
         oc.cmd = {
           push: function (f) {
@@ -425,12 +395,9 @@ var oc = oc || {};
         };
       };
 
-      var wasJqueryThereAlready = !!$window.jQuery;
-      var wasDollarThereAlready = !!$window.$;
-
       oc.require('jQuery', JQUERY_URL, function (jQuery) {
         oc.requireSeries(externals, function () {
-          if (wasJqueryThereAlready || wasDollarThereAlready) {
+          if ($window.jQuery || $window.$) {
             $ = oc.$ = jQuery;
           } else {
             $ = oc.$ = jQuery.noConflict();
@@ -461,8 +428,8 @@ var oc = oc || {};
           function (compiledView) {
             if (!compiledView) {
               callback(
-                MESSAGES_ERRORS_LOADING_COMPILED_VIEW.replace(
-                  firstPlaceholder,
+                interpolate(
+                  MESSAGES_ERRORS_LOADING_COMPILED_VIEW,
                   compiledViewInfo.src
                 )
               );
@@ -486,8 +453,8 @@ var oc = oc || {};
         );
       } else {
         callback(
-          MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED.replace(
-            firstPlaceholder,
+          interpolate(
+            MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED,
             compiledViewInfo.type
           )
         );
@@ -501,12 +468,8 @@ var oc = oc || {};
         attr = $component.attr.bind($component),
         dataRendering = attr(dataRenderingAttribute),
         dataRendered = attr(dataRenderedAttribute),
-        isRendering = isBool(dataRendering)
-          ? dataRendering
-          : dataRendering == 'true',
-        isRendered = isBool(dataRendered)
-          ? dataRendered
-          : dataRendered == 'true';
+        isRendering = '' + dataRendering == 'true',
+        isRendered = '' + dataRendered == 'true';
 
       if (!isRendering && !isRendered) {
         info(MESSAGES_RETRIEVING);
@@ -531,10 +494,10 @@ var oc = oc || {};
                 component: $component[0]
               });
               error(err);
-              return callback();
+              callback();
+            } else {
+              processHtml($component, data, callback);
             }
-
-            processHtml($component, data, callback);
           }
         );
       } else {
@@ -560,7 +523,11 @@ var oc = oc || {};
     }
 
     oc.ready(function () {
-      if (href) {
+      if (!href) {
+        callback(
+          interpolate(MESSAGES_ERRORS_RENDERING, MESSAGES_ERRORS_HREF_MISSING)
+        );
+      } else {
         $.ajax({
           url: addParametersToHref(
             href,
@@ -574,40 +541,32 @@ var oc = oc || {};
           contentType: 'text/plain',
           crossDomain: true,
           success: function (apiResponse) {
+            var template = apiResponse.template;
             if (apiResponse.renderMode == 'unrendered') {
               apiResponse.data.id = id;
-              oc.render(
-                apiResponse.template,
-                apiResponse.data,
-                function (err, html) {
-                  if (err) {
-                    return callback(
-                      MESSAGES_ERRORS_RENDERING.replace(
-                        firstPlaceholder,
-                        apiResponse.href
-                      ).replace(secondPlaceholder, err)
-                    );
-                  }
-                  info(
-                    MESSAGES_RENDERED.replace(
-                      firstPlaceholder,
-                      apiResponse.template.src
+              oc.render(template, apiResponse.data, function (err, html) {
+                if (err) {
+                  callback(
+                    interpolate(
+                      MESSAGES_ERRORS_RENDERING,
+                      err,
+                      apiResponse.href
                     )
                   );
+                } else {
+                  info(interpolate(MESSAGES_RENDERED, template.src));
                   callback(null, {
                     id: id,
                     html: html,
                     baseUrl: apiResponse.baseUrl,
-                    key: apiResponse.template.key,
+                    key: template.key,
                     version: apiResponse.version,
                     name: apiResponse.name
                   });
                 }
-              );
+              });
             } else if (apiResponse.renderMode == 'rendered') {
-              info(
-                MESSAGES_RENDERED.replace(firstPlaceholder, apiResponse.href)
-              );
+              info(interpolate(MESSAGES_RENDERED, apiResponse.href));
 
               if (apiResponse.html.indexOf('<' + OC_TAG) == 0) {
                 var innerHtmlPlusEnding = apiResponse.html.slice(
@@ -628,7 +587,9 @@ var oc = oc || {};
             }
           },
           error: function (err) {
-            if (err && err.status == 429) retries[href] = 0;
+            if (err && err.status == 429) {
+              retries[href] = 0;
+            }
             error(MESSAGES_ERRORS_RETRIEVING);
             retry(
               href,
@@ -636,20 +597,11 @@ var oc = oc || {};
                 oc.renderByHref(href, requestNumber, callback);
               },
               function () {
-                callback(
-                  MESSAGES_ERRORS_RETRY_FAILED.replace(firstPlaceholder, href)
-                );
+                callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
               }
             );
           }
         });
-      } else {
-        return callback(
-          MESSAGES_ERRORS_RENDERING.replace(
-            secondPlaceholder,
-            MESSAGES_ERRORS_HREF_MISSING
-          )
-        );
       }
     });
   };
@@ -661,16 +613,14 @@ var oc = oc || {};
         ),
         toDo = $unloadedComponents.length;
 
-      var done = function () {
-        toDo--;
-        if (!toDo) {
-          oc.renderUnloadedComponents();
-        }
-      };
-
       if (toDo > 0) {
         $.each($unloadedComponents, function (_idx, unloadedComponent) {
-          oc.renderNestedComponent(unloadedComponent, done);
+          oc.renderNestedComponent(unloadedComponent, function () {
+            toDo--;
+            if (!toDo) {
+              oc.renderUnloadedComponents();
+            }
+          });
         });
       }
     });
@@ -682,7 +632,7 @@ var oc = oc || {};
         callback = noop;
       }
 
-      if ($(placeholder)) {
+      if (placeholder) {
         $(placeholder).html('<' + OC_TAG + ' href="' + href + '" />');
         var newComponent = $(OC_TAG, placeholder);
         oc.renderNestedComponent(newComponent, function () {
@@ -692,7 +642,7 @@ var oc = oc || {};
     });
   };
   // render the components
-  oc.ready(oc.renderUnloadedComponents);
+  loadAfterReady();
 
   // expose public variables and methods
   exports = oc;
