@@ -48,11 +48,20 @@ function transformTemplates(templates = {}) {
   return templates;
 }
 
-function getFiles({ sync = false, conf = {} }) {
-  const registeredTemplates = {
-    ...baseTemplates,
-    ...transformTemplates(conf.templates)
+function parseConf(conf) {
+  return {
+    externals: conf.externals || [],
+    retryLimit: conf.retryLimit || 30,
+    retryInterval: conf.retryInterval || 5000,
+    disableLoader: Boolean(conf.disableLoader ?? false),
+    templates: {
+      ...baseTemplates,
+      ...transformTemplates(conf.templates)
+    }
   };
+}
+
+function getFiles({ sync = false, conf }) {
   const srcPath = '../src/';
   const vendorPath = '../vendor/';
 
@@ -62,15 +71,12 @@ function getFiles({ sync = false, conf = {} }) {
     x
       .replaceAll(
         '__REGISTERED_TEMPLATES_PLACEHOLDER__',
-        JSON.stringify(registeredTemplates)
+        JSON.stringify(conf.templates)
       )
-      .replaceAll('__EXTERNALS__', JSON.stringify(conf.externals || []))
-      .replaceAll('__DEFAULT_RETRY_LIMIT__', conf.retryLimit || 30)
-      .replaceAll('__DEFAULT_RETRY_INTERVAL__', conf.retryInterval || 5000)
-      .replaceAll(
-        '__DEFAULT_DISABLE_LOADER__',
-        Boolean(conf.disableLoader ?? false)
-      );
+      .replaceAll('__EXTERNALS__', JSON.stringify(conf.externals))
+      .replaceAll('__DEFAULT_RETRY_LIMIT__', conf.retryLimit)
+      .replaceAll('__DEFAULT_RETRY_INTERVAL__', conf.retryInterval)
+      .replaceAll('__DEFAULT_DISABLE_LOADER__', conf.disableLoader);
 
   if (sync) {
     const l = fs.readFileSync(lPath, 'utf-8');
@@ -107,13 +113,15 @@ function compileFiles(l, ocClient) {
 }
 
 async function compile(conf = {}) {
-  const [l, ocClient] = await getFiles({ sync: false, conf });
-  return compileFiles(l, ocClient);
+  const parsedConf = parseConf(conf);
+  const [l, ocClient] = await getFiles({ sync: false, conf: parsedConf });
+  return compileFiles(l, ocClient, parsedConf);
 }
 
 function compileSync(conf = {}) {
-  const [l, ocClient] = getFiles({ sync: true, conf });
-  return compileFiles(l, ocClient);
+  const parsedConf = parseConf(conf);
+  const [l, ocClient] = getFiles({ sync: true, conf: parsedConf });
+  return compileFiles(l, ocClient, parsedConf);
 }
 
 module.exports = {
