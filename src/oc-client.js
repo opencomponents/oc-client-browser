@@ -60,10 +60,10 @@ var oc = oc || {};
     renderedComponents = oc.renderedComponents,
     dataRenderedAttribute = 'data-rendered',
     dataRenderingAttribute = 'data-rendering',
-    error = function (msg) {
+    logError = function (msg) {
       console.log(msg);
     },
-    info = function (msg) {
+    logInfo = function (msg) {
       ocConf.debug && console.log(msg);
     };
 
@@ -435,17 +435,15 @@ var oc = oc || {};
               );
             } else {
               asyncRequireForEach(template.externals, function () {
-                if (type == 'oc-template-handlebars') {
-                  try {
-                    callback(
-                      null,
-                      $window.Handlebars.template(compiledView, [])(model)
-                    );
-                  } catch (e) {
-                    callback('' + e);
-                  }
-                } else {
-                  callback(null, compiledView(model));
+                try {
+                  callback(
+                    null,
+                    type == 'oc-template-handlebars'
+                      ? $window.Handlebars.template(compiledView, [])(model)
+                      : compiledView(model)
+                  );
+                } catch (e) {
+                  callback('' + e);
                 }
               });
             }
@@ -472,7 +470,7 @@ var oc = oc || {};
         isRendered = '' + dataRendered == 'true';
 
       if (!isRendering && !isRendered) {
-        info(MESSAGES_RETRIEVING);
+        logInfo(MESSAGES_RETRIEVING);
         attr(dataRenderingAttribute, true);
         if (!DISABLE_LOADER) {
           $component.html(
@@ -493,7 +491,7 @@ var oc = oc || {};
                 data: data,
                 component: $component[0]
               });
-              error(err);
+              logError(err);
               callback();
             } else {
               processHtml($component, data, callback);
@@ -506,21 +504,11 @@ var oc = oc || {};
     });
   };
 
-  oc.renderByHref = function (hrefOrOptions, retryNumberOrCallback, cb) {
-    var callback = cb,
-      retryNumber = retryNumberOrCallback,
-      href = hrefOrOptions,
-      id = Math.floor(Math.random() * 9999999999);
-
-    if (isFunction(retryNumberOrCallback)) {
-      callback = retryNumberOrCallback;
-      retryNumber = 0;
-    }
-    if (typeof hrefOrOptions != 'string') {
-      href = hrefOrOptions.href;
-      retryNumber = hrefOrOptions.retryNumber || retryNumber || 0;
-      id = hrefOrOptions.id || id;
-    }
+  oc.renderByHref = function (hrefOrOptions, retryNumberOrCallback, callback) {
+    callback = callback || retryNumberOrCallback;
+    var retryNumber = hrefOrOptions.retryNumber || +retryNumberOrCallback || 0,
+      href = hrefOrOptions.href || hrefOrOptions,
+      id = hrefOrOptions.id || Math.floor(Math.random() * 9999999999);
 
     oc.ready(function () {
       if (!href) {
@@ -554,7 +542,7 @@ var oc = oc || {};
                     )
                   );
                 } else {
-                  info(interpolate(MESSAGES_RENDERED, template.src));
+                  logInfo(interpolate(MESSAGES_RENDERED, template.src));
                   callback(null, {
                     id: id,
                     html: html,
@@ -566,7 +554,7 @@ var oc = oc || {};
                 }
               });
             } else if (apiResponse.renderMode == 'rendered') {
-              info(interpolate(MESSAGES_RENDERED, apiResponse.href));
+              logInfo(interpolate(MESSAGES_RENDERED, apiResponse.href));
 
               if (apiResponse.html.indexOf('<' + OC_TAG) == 0) {
                 var innerHtmlPlusEnding = apiResponse.html.slice(
@@ -590,7 +578,7 @@ var oc = oc || {};
             if (err && err.status == 429) {
               retries[href] = 0;
             }
-            error(MESSAGES_ERRORS_RETRIEVING);
+            logError(MESSAGES_ERRORS_RETRIEVING);
             retry(
               href,
               function (requestNumber) {
