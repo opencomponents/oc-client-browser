@@ -68,9 +68,7 @@ var oc = oc || {};
     };
 
   // constants
-  var JQUERY_URL =
-      'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js',
-    RETRY_INTERVAL = ocConf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
+  var RETRY_INTERVAL = ocConf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
     RETRY_LIMIT = ocConf.retryLimit || __DEFAULT_RETRY_LIMIT__,
     DISABLE_LOADER = isBool(ocConf.disableLoader)
       ? ocConf.disableLoader
@@ -199,17 +197,17 @@ var oc = oc || {};
   };
 
   var asyncRequireForEach = function (toLoad, loaded, callback) {
-    if (isFunction(loaded)) {
+    if (!callback) {
       callback = loaded;
       loaded = [];
     }
 
     if (!toLoad.length) {
-      callback();
+      callback(loaded);
     } else {
       var loading = toLoad[0];
-      oc.require(loading.global, loading.url, function () {
-        asyncRequireForEach(toLoad.slice(1), loaded.concat(loading), callback);
+      oc.require(loading.global, loading.url, function (resolved) {
+        asyncRequireForEach(toLoad.slice(1), loaded.concat(resolved), callback);
       });
     }
   };
@@ -265,9 +263,6 @@ var oc = oc || {};
       ]
     };
     var headers = getHeaders();
-    if (jsonRequest) {
-      headers['Content-Type'] = 'application/json';
-    }
     var ajaxOptions = {
       method: 'POST',
       url: baseUrl,
@@ -283,6 +278,7 @@ var oc = oc || {};
     };
     if (jsonRequest) {
       ajaxOptions.dataType = 'json';
+      headers['Content-Type'] = 'application/json';
     }
 
     $.ajax(ajaxOptions);
@@ -323,27 +319,25 @@ var oc = oc || {};
     isRequired('name', options.name);
 
     var withFinalSlash = function (s) {
+      if (!s) return '';
+
       return s.match(/\/$/) ? s : s + '/';
     };
 
-    var href = withFinalSlash(options.baseUrl) + withFinalSlash(options.name);
-
-    if (options.version) {
-      href += withFinalSlash(options.version);
-    }
+    var href =
+      withFinalSlash(options.baseUrl) +
+      withFinalSlash(options.name) +
+      withFinalSlash(options.version);
 
     if (options.parameters) {
       href += '?';
-      for (var parameter in options.parameters) {
-        // eslint-disable-next-line no-prototype-builtins
-        if (options.parameters.hasOwnProperty(parameter)) {
-          var value = options.parameters[parameter];
-          if (/[+&=]/.test(value)) {
-            value = encodeURIComponent(value);
-          }
-          href += parameter + '=' + value + '&';
+      $.each(options.parameters, function (key, value) {
+        if (/[+&=]/.test(value)) {
+          value = encodeURIComponent(value);
         }
-      }
+        href += key + '=' + value + '&';
+      });
+
       href = href.slice(0, -1);
     }
 
@@ -391,15 +385,14 @@ var oc = oc || {};
         };
       };
 
-      oc.require('jQuery', JQUERY_URL, function (jQuery) {
-        oc.requireSeries(externals, function () {
-          if ($window.jQuery || $window.$) {
-            $ = oc.$ = jQuery;
-          } else {
-            $ = oc.$ = jQuery.noConflict();
-          }
-          done();
-        });
+      oc.requireSeries(externals, function (deps) {
+        var jQuery = deps[0];
+        if ($window.jQuery || $window.$) {
+          $ = oc.$ = jQuery;
+        } else {
+          $ = oc.$ = jQuery.noConflict();
+        }
+        done();
       });
     }
   };
@@ -568,28 +561,22 @@ var oc = oc || {};
   oc.renderUnloadedComponents = function () {
     oc.ready(function () {
       var $unloadedComponents = $(
-          OC_TAG + '[data-rendered!=true][data-failed!=true]'
-        ),
-        toDo = $unloadedComponents.length;
+        OC_TAG + '[data-rendered!=true][data-failed!=true]'
+      );
 
-      if (toDo > 0) {
-        $.each($unloadedComponents, function (_idx, unloadedComponent) {
-          oc.renderNestedComponent(unloadedComponent, function () {
-            toDo--;
-            if (!toDo) {
-              oc.renderUnloadedComponents();
-            }
-          });
+      $unloadedComponents.map(function (idx, unloadedComponent) {
+        oc.renderNestedComponent(unloadedComponent, function () {
+          if (idx == $unloadedComponents.length - 1) {
+            oc.renderUnloadedComponents();
+          }
         });
-      }
+      });
     });
   };
 
   oc.load = function (placeholder, href, callback) {
     oc.ready(function () {
-      if (!isFunction(callback)) {
-        callback = noop;
-      }
+      callback = callback || noop;
 
       if (placeholder) {
         $(placeholder).html('<' + OC_TAG + ' href="' + href + '" />');

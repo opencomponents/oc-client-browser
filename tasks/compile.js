@@ -49,8 +49,13 @@ function transformTemplates(templates = {}) {
 }
 
 function parseConf(conf) {
+  const jQueryExternal = {
+    global: 'jQuery',
+    url: 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'
+  };
+
   return {
-    externals: conf.externals || [],
+    externals: [jQueryExternal].concat(conf.externals || []),
     retryLimit: conf.retryLimit || 30,
     retryInterval: conf.retryInterval || 5000,
     disableLoader: Boolean(conf.disableLoader ?? false),
