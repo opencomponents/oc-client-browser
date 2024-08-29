@@ -148,30 +148,6 @@ describe('oc-client : getData', function () {
         );
       });
 
-      it('should call the callback with an error if the registry responds with a rendered component', function (done) {
-        oc.$.ajax = function (options) {
-          return options.success([
-            { response: { renderMode: 'rendered', data: 'hello' } }
-          ]);
-        };
-
-        execute(
-          {
-            baseUrl: 'http://www.components.com/v2',
-            name: 'myComponent',
-            version: '6.6.6',
-            parameters: {
-              name: 'evil'
-            }
-          },
-          function (err, data) {
-            expect(err).toEqual('Error getting data');
-            expect(data).toEqual(undefined);
-            done();
-          }
-        );
-      });
-
       describe('when json is requested', function () {
         it('should call the $.ajax method correctly', function (done) {
           var spy = sinon.spy(oc.$, 'ajax');

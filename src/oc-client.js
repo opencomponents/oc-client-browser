@@ -83,7 +83,6 @@ var oc = oc || {};
     MESSAGES_ERRORS_RETRY_FAILED =
       'Failed to load $0 component ' + RETRY_LIMIT + ' times. Giving up',
     MESSAGES_ERRORS_LOADING_COMPILED_VIEW = 'Error getting compiled view: $0',
-    MESSAGES_ERRORS_GETTING_DATA = 'Error getting data',
     MESSAGES_ERRORS_RENDERING = 'Error rendering component: $1, error: $0',
     MESSAGES_ERRORS_RETRIEVING =
       'Failed to retrieve the component. Retrying in ' +
@@ -277,9 +276,6 @@ var oc = oc || {};
       crossDomain: true,
       success: function (apiResponse) {
         var response = apiResponse[0].response;
-        if (response.renderMode == 'rendered') {
-          return cb(MESSAGES_ERRORS_GETTING_DATA);
-        }
         var err = response.error ? response.details || response.error : null;
         cb(err, response.data, apiResponse[0]);
       },
@@ -530,49 +526,24 @@ var oc = oc || {};
           crossDomain: true,
           success: function (apiResponse) {
             var template = apiResponse.template;
-            if (apiResponse.renderMode == 'unrendered') {
-              apiResponse.data.id = id;
-              oc.render(template, apiResponse.data, function (err, html) {
-                if (err) {
-                  callback(
-                    interpolate(
-                      MESSAGES_ERRORS_RENDERING,
-                      err,
-                      apiResponse.href
-                    )
-                  );
-                } else {
-                  logInfo(interpolate(MESSAGES_RENDERED, template.src));
-                  callback(null, {
-                    id: id,
-                    html: html,
-                    baseUrl: apiResponse.baseUrl,
-                    key: template.key,
-                    version: apiResponse.version,
-                    name: apiResponse.name
-                  });
-                }
-              });
-            } else if (apiResponse.renderMode == 'rendered') {
-              logInfo(interpolate(MESSAGES_RENDERED, apiResponse.href));
-
-              if (apiResponse.html.indexOf('<' + OC_TAG) == 0) {
-                var innerHtmlPlusEnding = apiResponse.html.slice(
-                    apiResponse.html.indexOf('>') + 1
-                  ),
-                  innerHtml = innerHtmlPlusEnding.slice(
-                    0,
-                    innerHtmlPlusEnding.lastIndexOf('<')
-                  );
-
-                apiResponse.html = innerHtml;
+            apiResponse.data.id = id;
+            oc.render(template, apiResponse.data, function (err, html) {
+              if (err) {
+                callback(
+                  interpolate(MESSAGES_ERRORS_RENDERING, err, apiResponse.href)
+                );
+              } else {
+                logInfo(interpolate(MESSAGES_RENDERED, template.src));
+                callback(null, {
+                  id: id,
+                  html: html,
+                  baseUrl: apiResponse.baseUrl,
+                  key: template.key,
+                  version: apiResponse.version,
+                  name: apiResponse.name
+                });
               }
-              callback(null, {
-                html: apiResponse.html,
-                version: apiResponse.version,
-                name: apiResponse.name
-              });
-            }
+            });
           },
           error: function (err) {
             if (err && err.status == 429) {

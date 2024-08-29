@@ -158,54 +158,6 @@ describe('oc-client : renderByHref', function () {
         });
       });
 
-      describe('when the registry responds with rendered component with container', function () {
-        var callback;
-        beforeEach(function () {
-          callback = sinon.spy();
-          initialise(renderedResponse);
-          eval(compiledViewContent);
-          oc.renderByHref(route, callback);
-        });
-
-        afterEach(cleanup);
-
-        it('should respond without an error', function () {
-          expect(callback.args[0][0]).toBe(null);
-        });
-
-        it('should respond with the rendered html', function () {
-          expect(callback.args[0][1].html).toEqual('Hello, world!!!');
-        });
-
-        it('should respond with the correct version', function () {
-          expect(callback.args[0][1].version).toEqual('1.2.123');
-        });
-      });
-
-      describe('when the registry responds with rendered component without container', function () {
-        var callback;
-        beforeEach(function () {
-          callback = sinon.spy();
-          initialise(renderedNoContainerResponse);
-          eval(compiledViewContent);
-          oc.renderByHref(route, callback);
-        });
-
-        afterEach(cleanup);
-
-        it('should respond without an error', function () {
-          expect(callback.args[0][0]).toBe(null);
-        });
-
-        it('should respond with the rendered html', function () {
-          expect(callback.args[0][1].html).toEqual('Hello, world!!');
-        });
-
-        it('should respond with the correct version', function () {
-          expect(callback.args[0][1].version).toEqual('1.2.123');
-        });
-      });
-
       describe('when getting component returns an error', function () {
         var ajaxMock, error;
         beforeEach(function (done) {
