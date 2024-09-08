@@ -53,7 +53,7 @@ function parseConf(conf) {
     global: 'jQuery',
     url: 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'
   };
-  const disableLegacyTemplates = Boolean(conf.disableLegacyTemplates ?? true);
+  const disableLegacyTemplates = Boolean(conf.disableLegacyTemplates ?? false);
   const transformedTemplates = transformTemplates(conf.templates);
   const templates = disableLegacyTemplates
     ? {
