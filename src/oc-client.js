@@ -51,9 +51,6 @@ var oc = oc || {};
     isBool = function (a) {
       return typeof a == 'boolean';
     },
-    isFunction = function (a) {
-      return typeof a == 'function';
-    },
     timeout = setTimeout,
     ocCmd = oc.cmd,
     ocConf = oc.conf,
@@ -136,7 +133,7 @@ var oc = oc || {};
   var getHeaders = function () {
     return $.extend(
       { Accept: 'application/vnd.oc.unrendered+json' },
-      isFunction(ocConf.globalHeaders)
+      typeof ocConf.global == 'function'
         ? ocConf.globalHeaders()
         : ocConf.globalHeaders
     );
@@ -158,7 +155,7 @@ var oc = oc || {};
 
   // A minimal require.js-ish that uses l.js
   oc.require = function (nameSpace, url, callback) {
-    if (isFunction(url)) {
+    if (!callback) {
       callback = url;
       url = nameSpace;
       nameSpace = undefined;
