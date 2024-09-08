@@ -72,27 +72,40 @@ function parseConf(conf) {
   };
 }
 
-function getFiles({ sync = false }) {
+function getFiles({ sync = false, conf }) {
   const srcPath = '../src/';
   const vendorPath = '../vendor/';
 
   const lPath = path.join(__dirname, vendorPath, 'l.js');
   const ocClientPath = path.join(__dirname, srcPath, 'oc-client.js');
+  const replaceGlobals = x =>
+    x
+      .replaceAll(
+        '__REGISTERED_TEMPLATES_PLACEHOLDER__',
+        JSON.stringify(conf.templates)
+      )
+      .replaceAll('__EXTERNALS__', JSON.stringify(conf.externals))
+      .replaceAll('__DEFAULT_RETRY_LIMIT__', conf.retryLimit)
+      .replaceAll('__DEFAULT_RETRY_INTERVAL__', conf.retryInterval)
+      .replaceAll('__DEFAULT_DISABLE_LOADER__', conf.disableLoader)
+      .replaceAll('__DISABLE_LEGACY_TEMPLATES__', conf.disableLegacyTemplates);
 
   if (sync) {
     const l = fs.readFileSync(lPath, 'utf-8');
-    const ocClient = fs.readFileSync(ocClientPath, 'utf-8');
+    const ocClient = replaceGlobals(fs.readFileSync(ocClientPath, 'utf-8'));
 
     return [l, ocClient];
   } else {
     const lPromise = readFile(lPath, 'utf-8');
-    const ocClientPromise = readFile(ocClientPath, 'utf-8');
+    const ocClientPromise = readFile(ocClientPath, 'utf-8').then(
+      replaceGlobals
+    );
 
     return Promise.all([lPromise, ocClientPromise]);
   }
 }
 
-function compileFiles(l, ocClient, conf) {
+function compileFiles(l, ocClient) {
   const version = packageJson.version;
   const licenseLink =
     'https://github.com/opencomponents/oc-client-browser/tree/master/LICENSES';
@@ -103,16 +116,6 @@ function compileFiles(l, ocClient, conf) {
     sourceMap: {
       filename: 'oc-client.min.js',
       url: 'oc-client.min.map'
-    },
-    compress: {
-      global_defs: {
-        __DISABLE_LEGACY_TEMPLATES__: conf.disableLegacyTemplates,
-        __DEFAULT_DISABLE_LOADER__: conf.disableLoader,
-        __DEFAULT_RETRY_INTERVAL__: conf.retryInterval,
-        __DEFAULT_RETRY_LIMIT__: conf.retryLimit,
-        __EXTERNALS__: conf.externals,
-        __REGISTERED_TEMPLATES_PLACEHOLDER__: conf.templates
-      }
     }
   });
 
@@ -123,14 +126,14 @@ function compileFiles(l, ocClient, conf) {
 
 async function compile(conf = {}) {
   const parsedConf = parseConf(conf);
-  const [l, ocClient] = await getFiles({ sync: false });
-  return compileFiles(l, ocClient, parsedConf);
+  const [l, ocClient] = await getFiles({ sync: false, conf: parsedConf });
+  return compileFiles(l, ocClient);
 }
 
 function compileSync(conf = {}) {
   const parsedConf = parseConf(conf);
-  const [l, ocClient] = getFiles({ sync: true });
-  return compileFiles(l, ocClient, parsedConf);
+  const [l, ocClient] = getFiles({ sync: true, conf: parsedConf });
+  return compileFiles(l, ocClient);
 }
 
 module.exports = {
