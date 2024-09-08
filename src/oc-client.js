@@ -76,21 +76,21 @@ var oc = oc || {};
     JSON_REQUESTS = !!ocConf.jsonRequests,
     MESSAGES_ERRORS_HREF_MISSING = 'Href parameter missing',
     MESSAGES_ERRORS_RETRY_FAILED =
-      'Failed to load $0 component ' + RETRY_LIMIT + ' times. Giving up',
-    MESSAGES_ERRORS_LOADING_COMPILED_VIEW = 'Error getting compiled view: $0',
-    MESSAGES_ERRORS_RENDERING = 'Error rendering component: $1, error: $0',
+      'Failed to load % component ' + RETRY_LIMIT + ' times. Giving up',
+    MESSAGES_ERRORS_LOADING_COMPILED_VIEW = 'Error getting compiled view: %',
+    MESSAGES_ERRORS_RENDERING = 'Error rendering component: %, error: ',
     MESSAGES_ERRORS_RETRIEVING =
       'Failed to retrieve the component. Retrying in ' +
       RETRY_INTERVAL / 1000 +
       ' seconds...',
     MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED =
-      'Error loading component: view engine "$0" not supported',
+      'Error loading component: view engine "%" not supported',
     MESSAGES_LOADING_COMPONENT = ocConf.loadingMessage || '',
-    MESSAGES_RENDERED = "Component '$0' correctly rendered",
+    MESSAGES_RENDERED = "Component '%' correctly rendered",
     MESSAGES_RETRIEVING =
       'Unrendered component found. Trying to retrieve it...',
-    interpolate = function (str, value, value2) {
-      return str.replace('$0', value).replace('$1', value2);
+    interpolate = function (str, value) {
+      return str.replace('%', value);
     };
 
   var registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__,
@@ -131,11 +131,10 @@ var oc = oc || {};
   };
 
   var getHeaders = function () {
+    var globalHeaders = ocConf.globalHeaders;
     return $.extend(
       { Accept: 'application/vnd.oc.unrendered+json' },
-      typeof ocConf.global == 'function'
-        ? ocConf.globalHeaders()
-        : ocConf.globalHeaders
+      typeof globalHeaders == 'function' ? globalHeaders() : globalHeaders
     );
   };
 
@@ -455,8 +454,8 @@ var oc = oc || {};
         attr = $component.attr.bind($component),
         dataRendering = attr(dataRenderingAttribute),
         dataRendered = attr(dataRenderedAttribute),
-        isRendering = '' + dataRendering == 'true',
-        isRendered = '' + dataRendered == 'true';
+        isRendering = dataRendering == 'true',
+        isRendered = dataRendered == 'true';
 
       if (!isRendering && !isRendered) {
         logInfo(MESSAGES_RETRIEVING);
@@ -501,9 +500,7 @@ var oc = oc || {};
 
     oc.ready(function () {
       if (!href) {
-        callback(
-          interpolate(MESSAGES_ERRORS_RENDERING, MESSAGES_ERRORS_HREF_MISSING)
-        );
+        callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
       } else {
         $.ajax({
           url: addParametersToHref(
@@ -523,7 +520,7 @@ var oc = oc || {};
             oc.render(template, apiResponse.data, function (err, html) {
               if (err) {
                 callback(
-                  interpolate(MESSAGES_ERRORS_RENDERING, err, apiResponse.href)
+                  interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) + err
                 );
               } else {
                 logInfo(interpolate(MESSAGES_RENDERED, template.src));
