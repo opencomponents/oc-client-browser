@@ -1,4 +1,4 @@
-/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __EXTERNALS__ */
+/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
 /* eslint no-var: 'off' */
 /* eslint prefer-arrow-callback: 'off' */
 
@@ -405,8 +405,10 @@ var oc = oc || {};
       }
 
       var type = compiledViewInfo.type;
-      if (type == 'jade' || type == 'handlebars') {
-        type = 'oc-template-' + type;
+      if (!__DISABLE_LEGACY_TEMPLATES__) {
+        if (type == 'jade' || type == 'handlebars') {
+          type = 'oc-template-' + type;
+        }
       }
       var template = registeredTemplates[type];
 
@@ -427,7 +429,8 @@ var oc = oc || {};
                 try {
                   callback(
                     null,
-                    type == 'oc-template-handlebars'
+                    !__DISABLE_LEGACY_TEMPLATES__ &&
+                      type == 'oc-template-handlebars'
                       ? $window.Handlebars.template(compiledView, [])(model)
                       : compiledView(model)
                   );

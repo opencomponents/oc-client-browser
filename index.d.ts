@@ -25,6 +25,7 @@ interface CompileOptions {
   retryInterval?: number;
   retryLimit?: number;
   disableLoader?: boolean;
+  disableLegacyTemplates?: boolean;
   externals?: External[];
 }
 type Compiled = { code: string; map: string; dev: string };
