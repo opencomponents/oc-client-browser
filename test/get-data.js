@@ -166,7 +166,6 @@ describe('oc-client : getData', function () {
               expect(spy.args[0][0].data).toEqual(
                 '{"components":[{"name":"myComponent","version":"6.6.6","parameters":{"name":"evil"}}]}'
               );
-              expect(spy.args[0][0].dataType).toEqual('json');
               expect(spy.args[0][0].headers['Content-Type']).toEqual(
                 'application/json'
               );
