@@ -273,7 +273,6 @@ var oc = oc || {};
       error: cb
     };
     if (jsonRequest) {
-      ajaxOptions.dataType = 'json';
       headers['Content-Type'] = 'application/json';
     }
 
