@@ -214,11 +214,12 @@ var oc = oc || {};
     var attr = $component.attr.bind($component),
       dataName = data.name,
       dataVersion = data.version;
-    $component.html(data.html);
     attr('id', data.id);
     attr(dataRenderedAttribute, true);
     attr(dataRenderingAttribute, false);
     attr('data-version', dataVersion);
+    attr('data-id', data.ocId);
+    $component.html(data.html);
 
     if (data.key) {
       attr('data-hash', data.key);
@@ -493,9 +494,10 @@ var oc = oc || {};
 
   oc.renderByHref = function (hrefOrOptions, retryNumberOrCallback, callback) {
     callback = callback || retryNumberOrCallback;
-    var retryNumber = hrefOrOptions.retryNumber || +retryNumberOrCallback || 0,
+    var ocId = Math.floor(Math.random() * 9999999999),
+      retryNumber = hrefOrOptions.retryNumber || +retryNumberOrCallback || 0,
       href = hrefOrOptions.href || hrefOrOptions,
-      id = hrefOrOptions.id || Math.floor(Math.random() * 9999999999),
+      id = hrefOrOptions.id || ocId,
       element = hrefOrOptions.element;
 
     oc.ready(function () {
@@ -527,6 +529,7 @@ var oc = oc || {};
                 logInfo(interpolate(MESSAGES_RENDERED, template.src));
                 callback(null, {
                   id: id,
+                  ocId: ocId,
                   html: html,
                   baseUrl: apiResponse.baseUrl,
                   key: template.key,
