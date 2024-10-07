@@ -466,7 +466,7 @@ var oc = oc || {};
         }
 
         oc.renderByHref(
-          { href: attr('href'), id: attr('id') },
+          { href: attr('href'), id: attr('id'), element: $component[0] },
           function (err, data) {
             if (err || !data) {
               attr(dataRenderingAttribute, false);
@@ -495,7 +495,8 @@ var oc = oc || {};
     callback = callback || retryNumberOrCallback;
     var retryNumber = hrefOrOptions.retryNumber || +retryNumberOrCallback || 0,
       href = hrefOrOptions.href || hrefOrOptions,
-      id = hrefOrOptions.id || Math.floor(Math.random() * 9999999999);
+      id = hrefOrOptions.id || Math.floor(Math.random() * 9999999999),
+      element = hrefOrOptions.element;
 
     oc.ready(function () {
       if (!href) {
@@ -516,6 +517,7 @@ var oc = oc || {};
           success: function (apiResponse) {
             var template = apiResponse.template;
             apiResponse.data.id = id;
+            apiResponse.data.element = element;
             oc.render(template, apiResponse.data, function (err, html) {
               if (err) {
                 callback(
@@ -542,7 +544,15 @@ var oc = oc || {};
             retry(
               href,
               function (requestNumber) {
-                oc.renderByHref(href, requestNumber, callback);
+                oc.renderByHref(
+                  {
+                    href: href,
+                    retryNumber: requestNumber,
+                    id: id,
+                    element: element
+                  },
+                  callback
+                );
               },
               function () {
                 callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
