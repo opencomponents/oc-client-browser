@@ -518,7 +518,7 @@ var oc = oc || {};
           crossDomain: true,
           success: function (apiResponse) {
             var template = apiResponse.template;
-            apiResponse.data.id = id;
+            apiResponse.data.id = ocId;
             apiResponse.data.element = element;
             oc.render(template, apiResponse.data, function (err, html) {
               if (err) {
