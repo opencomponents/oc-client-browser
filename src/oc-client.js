@@ -297,13 +297,17 @@ var oc = oc || {};
           if (err) {
             reject(err);
           } else {
-            var props = data.component.props;
-            delete props._staticPath;
-            delete props._baseUrl;
-            delete props._componentName;
-            delete props._componentVersion;
+            if (data.component) {
+              var props = data.component.props;
+              delete props._staticPath;
+              delete props._baseUrl;
+              delete props._componentName;
+              delete props._componentVersion;
 
-            resolve(props);
+              resolve(props);
+            } else {
+              resolve();
+            }
           }
         }
       );
