@@ -65,7 +65,58 @@ var oc = oc || {};
     };
 
   // constants
-  var RETRY_INTERVAL = ocConf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
+  var IS_FETCH_AVAILABLE = typeof fetch === 'function',
+    handleResponseCallback = function (apiResponse, callback) {
+      var response = apiResponse[0].response;
+      var err = response.error ? response.details || response.error : null;
+      callback(err, response.data, apiResponse[0]);
+    },
+    handleTemplateCallback = function (
+      apiResponse,
+      ocId,
+      id,
+      element,
+      callback
+    ) {
+      var template = apiResponse.template;
+      apiResponse.data.id = ocId;
+      apiResponse.data.element = element;
+      oc.render(template, apiResponse.data, function (err, html) {
+        if (err) {
+          callback(
+            interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) + err
+          );
+        } else {
+          logInfo(interpolate(MESSAGES_RENDERED, template.src));
+          callback(null, {
+            id: id,
+            ocId: ocId,
+            html: html,
+            baseUrl: apiResponse.baseUrl,
+            key: template.key,
+            version: apiResponse.version,
+            name: apiResponse.name
+          });
+        }
+      });
+    },
+    handleFetchError = function (err, href, retryFn, failedFn) {
+      if (err && err.status == 429) {
+        retries[href] = 0;
+      }
+      logError(MESSAGES_ERRORS_RETRIEVING);
+      retry(href, retryFn, failedFn);
+    },
+    handleFetchResponse = function (response) {
+      if (!response.ok) throw response;
+      if (response.headers.get('Content-Type') !== 'x-text/stream')
+        return response.json();
+
+      return oc._decode(response.body).then(function (decoded) {
+        return decoded.value;
+      });
+    },
+    RETRY_INTERVAL = ocConf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
     RETRY_LIMIT = ocConf.retryLimit || __DEFAULT_RETRY_LIMIT__,
     DISABLE_LOADER = isBool(ocConf.disableLoader)
       ? ocConf.disableLoader
@@ -242,42 +293,71 @@ var oc = oc || {};
   function getData(options, cb) {
     cb = cb || noop;
     var version = options.version,
-      baseUrl = options.baseUrl,
       name = options.name,
-      json = options.json;
+      json = options.json,
+      baseUrl = options.baseUrl;
+    if (options.action) {
+      baseUrl =
+        baseUrl +
+          '~actions/' +
+          options.action +
+          '/' +
+          options.name +
+          '/' +
+          options.version || '';
+    }
     isRequired('version', version);
     isRequired('baseUrl', baseUrl);
     isRequired('name', name);
+    var parameters = $.extend({}, ocConf.globalParameters, options.parameters);
     var jsonRequest = isBool(json) ? json : JSON_REQUESTS;
-    var data = {
-      components: [
-        {
-          action: options.action,
-          name: name,
-          version: version,
-          parameters: $.extend({}, ocConf.globalParameters, options.parameters)
-        }
-      ]
-    };
+    var data = options.action
+      ? parameters
+      : {
+          components: [
+            {
+              action: options.action,
+              name: name,
+              version: version,
+              parameters: parameters
+            }
+          ]
+        };
     var headers = getHeaders();
-    var ajaxOptions = {
-      method: 'POST',
-      url: baseUrl,
-      data: jsonRequest ? JSON.stringify(data) : data,
-      headers: headers,
-      crossDomain: true,
-      success: function (apiResponse) {
-        var response = apiResponse[0].response;
-        var err = response.error ? response.details || response.error : null;
-        cb(err, response.data, apiResponse[0]);
-      },
-      error: cb
-    };
     if (jsonRequest) {
       headers['Content-Type'] = 'application/json';
     }
 
-    $.ajax(ajaxOptions);
+    if (IS_FETCH_AVAILABLE) {
+      fetch(baseUrl, {
+        method: 'POST',
+        headers: headers,
+        body: jsonRequest ? JSON.stringify(data) : $.param(data)
+        // credentials: 'include'
+      })
+        .then(handleFetchResponse)
+        .then(function (apiResponse) {
+          if (!options.action) {
+            handleResponseCallback(apiResponse, cb);
+          } else {
+            cb(null, apiResponse.data);
+          }
+        })
+        .catch(cb);
+    } else {
+      var ajaxOptions = {
+        method: 'POST',
+        url: baseUrl,
+        data: jsonRequest ? JSON.stringify(data) : data,
+        headers: headers,
+        crossDomain: true,
+        success: function (apiResponse) {
+          handleResponseCallback(apiResponse, cb);
+        },
+        error: cb
+      };
+      $.ajax(ajaxOptions);
+    }
   }
   oc.getData = getData;
   oc.getAction = function (options) {
@@ -508,65 +588,81 @@ var oc = oc || {};
       if (!href) {
         callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
       } else {
-        $.ajax({
-          url: addParametersToHref(
-            href,
-            $.extend(
-              {},
-              ocConf.globalParameters,
-              RETRY_SEND_NUMBER && { __oc_Retry: retryNumber }
-            )
-          ),
-          headers: getHeaders(),
-          contentType: 'text/plain',
-          crossDomain: true,
-          success: function (apiResponse) {
-            var template = apiResponse.template;
-            apiResponse.data.id = ocId;
-            apiResponse.data.element = element;
-            oc.render(template, apiResponse.data, function (err, html) {
-              if (err) {
-                callback(
-                  interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) + err
-                );
-              } else {
-                logInfo(interpolate(MESSAGES_RENDERED, template.src));
-                callback(null, {
-                  id: id,
-                  ocId: ocId,
-                  html: html,
-                  baseUrl: apiResponse.baseUrl,
-                  key: template.key,
-                  version: apiResponse.version,
-                  name: apiResponse.name
-                });
-              }
+        var url = addParametersToHref(
+          href,
+          $.extend(
+            {},
+            ocConf.globalParameters,
+            RETRY_SEND_NUMBER && { __oc_Retry: retryNumber }
+          )
+        );
+        var headers = getHeaders();
+        var contentType = 'text/plain';
+        headers['Content-Type'] = contentType;
+
+        if (IS_FETCH_AVAILABLE) {
+          fetch(url, {
+            headers: headers
+            // credentials: 'include'
+          })
+            .then(handleFetchResponse)
+            .then(function (apiResponse) {
+              handleTemplateCallback(apiResponse, ocId, id, element, callback);
+            })
+            .catch(function (err) {
+              handleFetchError(
+                err,
+                href,
+                function (requestNumber) {
+                  oc.renderByHref(
+                    {
+                      href: href,
+                      retryNumber: requestNumber,
+                      id: id,
+                      element: element
+                    },
+                    callback
+                  );
+                },
+                function () {
+                  callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
+                }
+              );
             });
-          },
-          error: function (err) {
-            if (err && err.status == 429) {
-              retries[href] = 0;
-            }
-            logError(MESSAGES_ERRORS_RETRIEVING);
-            retry(
-              href,
-              function (requestNumber) {
-                oc.renderByHref(
-                  {
-                    href: href,
-                    retryNumber: requestNumber,
-                    id: id,
-                    element: element
-                  },
-                  callback
-                );
-              },
-              function () {
-                callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
+        } else {
+          $.ajax({
+            url: url,
+            headers: headers,
+            contentType: contentType,
+            crossDomain: true,
+            success: function (apiResponse) {
+              handleTemplateCallback(apiResponse, ocId, id, element, callback);
+            },
+            error: function (err) {
+              if (err && err.status == 429) {
+                retries[href] = 0;
               }
-            );
-          }
-        });
+              logError(MESSAGES_ERRORS_RETRIEVING);
+              retry(
+                href,
+                function (requestNumber) {
+                  oc.renderByHref(
+                    {
+                      href: href,
+                      retryNumber: requestNumber,
+                      id: id,
+                      element: element
+                    },
+                    callback
+                  );
+                },
+                function () {
+                  callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
+                }
+              );
+            }
+          });
+        }
       }
     });
   };

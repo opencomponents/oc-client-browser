@@ -4,6 +4,7 @@ const fs = require('fs');
 const { promisify } = require('util');
 const path = require('path');
 const uglifyJs = require('uglify-js');
+const esbuild = require('esbuild');
 
 const readFile = promisify(fs.readFile);
 const packageJson = require('../package');
@@ -93,24 +94,42 @@ function getFiles({ sync = false, conf }) {
   if (sync) {
     const l = fs.readFileSync(lPath, 'utf-8');
     const ocClient = replaceGlobals(fs.readFileSync(ocClientPath, 'utf-8'));
+    const {
+      outputFiles: [turboStream]
+    } = esbuild.buildSync({
+      entryPoints: [path.join(__dirname, vendorPath, 'turbostream.js')],
+      format: 'iife',
+      write: false,
+      bundle: true,
+      minify: false
+    });
 
-    return [l, ocClient];
+    return [turboStream.text, l, ocClient];
   } else {
     const lPromise = readFile(lPath, 'utf-8');
     const ocClientPromise = readFile(ocClientPath, 'utf-8').then(
       replaceGlobals
     );
+    const turboStreamPromise = esbuild
+      .build({
+        entryPoints: [path.join(__dirname, vendorPath, 'turbostream.js')],
+        format: 'iife',
+        write: false,
+        bundle: true,
+        minify: false
+      })
+      .then(x => x.outputFiles[0].text);
 
-    return Promise.all([lPromise, ocClientPromise]);
+    return Promise.all([turboStreamPromise, lPromise, ocClientPromise]);
   }
 }
 
-function compileFiles(l, ocClient) {
+function compileFiles(turboStream, l, ocClient) {
   const version = packageJson.version;
   const licenseLink =
     'https://github.com/opencomponents/oc-client-browser/tree/master/LICENSES';
   const license = `/*! OpenComponents client v${version} | (c) 2015-${new Date().getFullYear()} OpenComponents community | ${licenseLink} */`;
-  const bundle = `${license}\n${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
+  const bundle = `${license}\n${turboStream}\n;\n${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
 
   const compressed = uglifyJs.minify(bundle, {
     sourceMap: {
@@ -126,14 +145,17 @@ function compileFiles(l, ocClient) {
 
 async function compile(conf = {}) {
   const parsedConf = parseConf(conf);
-  const [l, ocClient] = await getFiles({ sync: false, conf: parsedConf });
-  return compileFiles(l, ocClient);
+  const [turboStream, l, ocClient] = await getFiles({
+    sync: false,
+    conf: parsedConf
+  });
+  return compileFiles(turboStream, l, ocClient);
 }
 
 function compileSync(conf = {}) {
   const parsedConf = parseConf(conf);
-  const [l, ocClient] = getFiles({ sync: true, conf: parsedConf });
-  return compileFiles(l, ocClient);
+  const [turboStream, l, ocClient] = getFiles({ sync: true, conf: parsedConf });
+  return compileFiles(turboStream, l, ocClient);
 }
 
 module.exports = {
