@@ -30,8 +30,8 @@
     "index.d.ts"
   ],
   "scripts": {
-    "saucelabs": "grunt sauce",
-    "test": "npm run build && grunt test",
+    "start": "serve -l 5173",
+    "test": "npm run build && npx playwright test",
     "build": "node tasks/build.js",
     "lint": "eslint .",
     "precommit": "lint-staged",
@@ -50,29 +50,18 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.1",
     "@typescript-eslint/eslint-plugin": "5.4.0",
     "@typescript-eslint/parser": "5.4.0",
     "eslint": "8.2.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-prettier": "4.0.0",
     "fs-extra": "10.0.0",
-    "grunt": "1.4.1",
-    "grunt-cli": "1.4.3",
-    "grunt-karma": "4.0.2",
     "husky": "7.0.4",
-    "jasmine-core": "^2.5.1",
-    "karma": "6.3.16",
-    "karma-jasmine": "^1.0.2",
-    "karma-phantomjs-launcher": "^1.0.2",
-    "karma-sauce-launcher": "^1.0.0",
-    "karma-sinon": "^1.0.5",
     "lint-staged": "11.2.3",
-    "load-grunt-tasks": "^4.0.0",
-    "lodash": "4.17.21",
-    "phantomjs-prebuilt": "^2.1.12",
     "prettier": "2.4.1",
-    "sinon": "^6.0.0",
-    "typescript": "4.4.4"
+    "serve": "^14.2.4",
+    "typescript": "^4.4.4"
   },
   "dependencies": {
     "uglify-js": "3.14.2",
