@@ -362,16 +362,6 @@ export function createOc(oc) {
         } else {
           $ = oc.$ = jQuery.noConflict();
         }
-        oc.$ = (() => {
-          let warned = false;
-          return () => {
-            if (!warned) {
-              warned = true;
-              console.warn('oc.$ is deprecated. Use oc.$ instead.');
-            }
-            return $;
-          };
-        })();
         done();
       });
     }
