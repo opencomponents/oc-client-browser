@@ -30,7 +30,7 @@
     "index.d.ts"
   ],
   "scripts": {
-    "start": "vite dev",
+    "start": "serve -l 5173",
     "test": "npm run build && npx playwright test",
     "build": "node tasks/build.js",
     "lint": "eslint .",
@@ -72,9 +72,9 @@
     "lodash": "4.17.21",
     "phantomjs-prebuilt": "^2.1.12",
     "prettier": "2.4.1",
+    "serve": "^14.2.4",
     "sinon": "^6.0.0",
-    "typescript": "^4.4.4",
-    "vite": "^6.2.0"
+    "typescript": "^4.4.4"
   },
   "dependencies": {
     "uglify-js": "3.14.2",

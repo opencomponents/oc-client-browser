@@ -87,6 +87,7 @@ test.describe('oc-client : renderUnloadedComponents', () => {
         // Mock ajax
         oc.$.ajax = function (p) {
           const isAnother = p.url.indexOf('another') > 0;
+          console.log('GET', p.url);
           p.success(
             (isAnother ? window.anotherComponent : window.aComponent).response
           );
@@ -98,7 +99,7 @@ test.describe('oc-client : renderUnloadedComponents', () => {
         };
 
         // Suppress console logs
-        console.log = function () {};
+        // console.log = function () {};
 
         // Add components to the DOM
         const aComponentHtml =

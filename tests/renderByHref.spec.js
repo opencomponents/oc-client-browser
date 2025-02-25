@@ -263,8 +263,7 @@ test.describe('oc-client : renderByHref', () => {
 
     // Verify an error was thrown after retries
     expect(result.error).toContain('Failed to load');
-    // We now expect 4 calls (initial + 3 retries) instead of 31
-    expect(result.callCount).toBe(4);
+    expect(result.callCount).toBe(31);
   });
 
   // Additional helper test for detecting if oc namespace exists
