@@ -106,6 +106,17 @@ export function createOc(oc) {
 		return href + (~href.indexOf("?") ? "&" : "?") + $.param(parameters);
 	};
 
+	const reanimateScripts = (component) => {
+		for (const script of Array.from(component.querySelectorAll("script"))) {
+			const newScript = document.createElement("script");
+			newScript.textContent = script.textContent;
+			for (const attribute of Array.from(script.attributes)) {
+				newScript.setAttribute(attribute.name, attribute.value);
+			}
+			script.parentNode?.replaceChild(newScript, script);
+		}
+	};
+
 	const getHeaders = () => {
 		const globalHeaders = ocConf.globalHeaders;
 		return {
@@ -115,7 +126,9 @@ export function createOc(oc) {
 	};
 
 	oc.addStylesToHead = (styles) => {
-		$("<style>" + styles + "</style>").appendTo($document.head);
+		const style = document.createElement("style");
+		style.textContent = styles;
+		document.head.appendChild(style);
 	};
 
 	const loadAfterReady = () => {
@@ -186,29 +199,31 @@ export function createOc(oc) {
 
 	oc.requireSeries = asyncRequireForEach;
 
-	const processHtml = ($component, data, callback) => {
-		const attr = $component.attr.bind($component);
+	const processHtml = (component, data, callback) => {
+		const setAttribute = component.setAttribute.bind(component);
 		const dataName = data.name;
 		const dataVersion = data.version;
-		attr("id", data.id);
-		attr(dataRenderedAttribute, true);
-		attr(dataRenderingAttribute, false);
-		attr("data-version", dataVersion);
-		attr("data-id", data.ocId);
-		$component.html(data.html);
+		setAttribute("id", data.id);
+		setAttribute(dataRenderedAttribute, true);
+		setAttribute(dataRenderingAttribute, false);
+		setAttribute("data-version", dataVersion);
+		setAttribute("data-id", data.ocId);
+		component.innerHTML = data.html;
+		// If the html contains <scripts> tags, innerHTML will not execute them.
+		// So we need to do it manually.
+		reanimateScripts(component);
 
 		if (data.key) {
-			attr("data-hash", data.key);
+			setAttribute("data-hash", data.key);
 		}
 
 		if (dataName) {
-			attr("data-name", dataName);
+			setAttribute("data-name", dataName);
 			renderedComponents[dataName] = { version: dataVersion };
 			if (data.baseUrl) {
 				renderedComponents[dataName].baseUrl = data.baseUrl;
 			}
-			// Get raw element from jQuery object
-			data.element = $component[0];
+			data.element = component;
 			oc.events.fire("oc:rendered", data);
 		}
 
@@ -431,39 +446,44 @@ export function createOc(oc) {
 
 	oc.renderNestedComponent = (component, callback) => {
 		oc.ready(() => {
-			const $component = $(component);
-			const attr = $component.attr.bind($component);
-			const dataRendering = attr(dataRenderingAttribute);
-			const dataRendered = attr(dataRenderedAttribute);
+			// If the component is a jQuery object, we need to get the first element
+			component = component[0] || component;
+			const getAttribute = component.getAttribute.bind(component);
+			const setAttribute = component.setAttribute.bind(component);
+			const dataRendering = getAttribute(dataRenderingAttribute);
+			const dataRendered = getAttribute(dataRenderedAttribute);
 			const isRendering = dataRendering == "true";
 			const isRendered = dataRendered == "true";
 
 			if (!isRendering && !isRendered) {
 				logInfo(MESSAGES_RETRIEVING);
-				attr(dataRenderingAttribute, true);
+				setAttribute(dataRenderingAttribute, true);
 				if (!DISABLE_LOADER) {
-					$component.html(
-						'<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + "</div>",
-					);
+					component.innerHTML =
+						'<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + "</div>";
 				}
 
 				oc.renderByHref(
-					{ href: attr("href"), id: attr("id"), element: $component[0] },
+					{
+						href: getAttribute("href"),
+						id: getAttribute("id"),
+						element: component,
+					},
 					(err, data) => {
 						if (err || !data) {
-							attr(dataRenderingAttribute, false);
-							attr(dataRenderedAttribute, false);
-							attr("data-failed", true);
-							$component.html("");
+							setAttribute(dataRenderingAttribute, false);
+							setAttribute(dataRenderedAttribute, false);
+							setAttribute("data-failed", true);
+							component.innerHTML = "";
 							oc.events.fire("oc:failed", {
 								originalError: err,
 								data: data,
-								component: $component[0],
+								component,
 							});
 							logError(err);
 							callback();
 						} else {
-							processHtml($component, data, callback);
+							processHtml(component, data, callback);
 						}
 					},
 				);
@@ -549,13 +569,13 @@ export function createOc(oc) {
 
 	oc.renderUnloadedComponents = () => {
 		oc.ready(() => {
-			const $unloadedComponents = $(
-				OC_TAG + "[data-rendered!=true][data-failed!=true]",
+			const unloadedComponents = document.querySelectorAll(
+				`${OC_TAG}:not([data-rendered="true"]):not([data-failed="true"])`,
 			);
 
-			$unloadedComponents.map((idx, unloadedComponent) => {
+			unloadedComponents.forEach((unloadedComponent, idx) => {
 				oc.renderNestedComponent(unloadedComponent, () => {
-					if (idx == $unloadedComponents.length - 1) {
+					if (idx == unloadedComponents.length - 1) {
 						oc.renderUnloadedComponents();
 					}
 				});
@@ -568,8 +588,9 @@ export function createOc(oc) {
 			callback = callback || noop;
 
 			if (placeholder) {
-				$(placeholder).html("<" + OC_TAG + ' href="' + href + '" />');
-				const newComponent = $(OC_TAG, placeholder);
+				placeholder = placeholder[0] || placeholder;
+				placeholder.innerHTML = "<" + OC_TAG + ' href="' + href + '" />';
+				const newComponent = placeholder.querySelector(OC_TAG);
 				oc.renderNestedComponent(newComponent, () => {
 					callback(newComponent);
 				});
