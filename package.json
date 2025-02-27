@@ -1,6 +1,6 @@
 {
   "name": "oc-client-browser",
-  "version": "1.9.5",
+  "version": "1.10.0",
   "description": "OC browser client",
   "main": "index.js",
   "types": "index.d.ts",
@@ -75,6 +75,7 @@
     "typescript": "4.4.4"
   },
   "dependencies": {
+    "turbo-stream": "^2.4.1",
     "uglify-js": "3.14.2",
     "universalify": "2.0.0"
   }

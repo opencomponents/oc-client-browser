@@ -77,6 +77,7 @@ function getFiles({ sync = false, conf }) {
   const vendorPath = '../vendor/';
 
   const lPath = path.join(__dirname, vendorPath, 'l.js');
+  const turboPath = path.join(__dirname, vendorPath, 'turbostream.js');
   const ocClientPath = path.join(__dirname, srcPath, 'oc-client.js');
   const replaceGlobals = x =>
     x
@@ -92,25 +93,27 @@ function getFiles({ sync = false, conf }) {
 
   if (sync) {
     const l = fs.readFileSync(lPath, 'utf-8');
+    const turbo = fs.readFileSync(turboPath, 'utf-8');
     const ocClient = replaceGlobals(fs.readFileSync(ocClientPath, 'utf-8'));
 
-    return [l, ocClient];
+    return [l, ocClient, turbo];
   } else {
     const lPromise = readFile(lPath, 'utf-8');
+    const turboPromise = readFile(turboPath, 'utf-8');
     const ocClientPromise = readFile(ocClientPath, 'utf-8').then(
       replaceGlobals
     );
 
-    return Promise.all([lPromise, ocClientPromise]);
+    return Promise.all([lPromise, ocClientPromise, turboPromise]);
   }
 }
 
-function compileFiles(l, ocClient) {
+function compileFiles(l, ocClient, turbo) {
   const version = packageJson.version;
   const licenseLink =
     'https://github.com/opencomponents/oc-client-browser/tree/master/LICENSES';
   const license = `/*! OpenComponents client v${version} | (c) 2015-${new Date().getFullYear()} OpenComponents community | ${licenseLink} */`;
-  const bundle = `${license}\n${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
+  const bundle = `${license}\n${turbo}\n;\n${l}\n;\n${ocClient}\n;\noc.clientVersion='${version}';`;
 
   const compressed = uglifyJs.minify(bundle, {
     sourceMap: {
@@ -126,14 +129,17 @@ function compileFiles(l, ocClient) {
 
 async function compile(conf = {}) {
   const parsedConf = parseConf(conf);
-  const [l, ocClient] = await getFiles({ sync: false, conf: parsedConf });
-  return compileFiles(l, ocClient);
+  const [l, ocClient, turbo] = await getFiles({
+    sync: false,
+    conf: parsedConf
+  });
+  return compileFiles(l, ocClient, turbo);
 }
 
 function compileSync(conf = {}) {
   const parsedConf = parseConf(conf);
-  const [l, ocClient] = getFiles({ sync: true, conf: parsedConf });
-  return compileFiles(l, ocClient);
+  const [l, ocClient, turbo] = getFiles({ sync: true, conf: parsedConf });
+  return compileFiles(l, ocClient, turbo);
 }
 
 module.exports = {
