@@ -1,4 +1,5 @@
 /* globals __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
+import { decode } from "turbo-stream";
 
 export function createOc(oc) {
 	// If oc client is already inside the page, we do nothing.
@@ -37,7 +38,7 @@ export function createOc(oc) {
 			if (response.headers.get("Content-Type") !== "x-text/stream")
 				return response.json();
 
-			return oc._decode(response.body).then((decoded) => decoded.value);
+			return decode(response.body).then((decoded) => decoded.value);
 		};
 
 	// constants
