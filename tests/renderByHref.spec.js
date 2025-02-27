@@ -50,35 +50,35 @@ test.describe("oc-client : renderByHref", () => {
 		});
 	});
 
-  test('should make a request to the registry with proper headers', async ({
-    page
-  }) => {
-    // Setup mock and track the fetch call
-    const fetchResult = await page.evaluate(() => {
-      // Save original fetch and ljs.load
-      const originalFetch = window.fetch;
-      const originalLjsLoad = ljs.load;
+	test("should make a request to the registry with proper headers", async ({
+		page,
+	}) => {
+		// Setup mock and track the fetch call
+		const fetchResult = await page.evaluate(() => {
+			// Save original fetch and ljs.load
+			const originalFetch = window.fetch;
+			const originalLjsLoad = ljs.load;
 
-      // Track fetch calls
-      let fetchCalls = [];
-      window.fetch = function (url, options) {
-        fetchCalls.push({
-          url: url,
-          method: options.method,
-          headers: options.headers
-        });
+			// Track fetch calls
+			const fetchCalls = [];
+			window.fetch = (url, options) => {
+				fetchCalls.push({
+					url: url,
+					method: options.method,
+					headers: options.headers,
+				});
 
-        // Create a response object that mimics fetch Response
-        const mockResponse = {
-          ok: true,
-          headers: {
-            get: () => null
-          },
-          json: () => Promise.resolve(window.unRenderedResponse)
-        };
+				// Create a response object that mimics fetch Response
+				const mockResponse = {
+					ok: true,
+					headers: {
+						get: () => null,
+					},
+					json: () => Promise.resolve(window.unRenderedResponse),
+				};
 
-        return Promise.resolve(mockResponse);
-      };
+				return Promise.resolve(mockResponse);
+			};
 
 			// Mock ljs.load to prevent actual script loading
 			ljs.load = (url, cb) => {
@@ -88,60 +88,60 @@ test.describe("oc-client : renderByHref", () => {
 			// Execute the compiled view content to register the component
 			eval(window.compiledViewContent);
 
-      // Call the method being tested
-      return new Promise(resolve => {
-        oc.renderByHref(window.route, () => {
-          // Restore original functions
-          window.fetch = originalFetch;
-          ljs.load = originalLjsLoad;
+			// Call the method being tested
+			return new Promise((resolve) => {
+				oc.renderByHref(window.route, () => {
+					// Restore original functions
+					window.fetch = originalFetch;
+					ljs.load = originalLjsLoad;
 
-          // Return the captured fetch calls
-          resolve(fetchCalls);
-        });
-      });
-    });
+					// Return the captured fetch calls
+					resolve(fetchCalls);
+				});
+			});
+		});
 
-    // Verify the fetch request
-    expect(fetchResult[0].method).toEqual('GET');
-    expect(fetchResult[0].headers['Accept']).toEqual(
-      'application/vnd.oc.unrendered+json'
-    );
-    expect(fetchResult[0].url).toEqual(
-      'http://my-registry.com/v3/a-component/1.2.X/?name=John&__oc_Retry=0'
-    );
-  });
+		// Verify the fetch request
+		expect(fetchResult[0].method).toEqual("GET");
+		expect(fetchResult[0].headers["Accept"]).toEqual(
+			"application/vnd.oc.unrendered+json",
+		);
+		expect(fetchResult[0].url).toEqual(
+			"http://my-registry.com/v3/a-component/1.2.X/?name=John&__oc_Retry=0",
+		);
+	});
 
-  test('should include globalParameters in the URL', async ({ page }) => {
-    // Setup mock and track the fetch call
-    const fetchResult = await page.evaluate(() => {
-      // Save original fetch, ljs.load, and config
-      const originalFetch = window.fetch;
-      const originalLjsLoad = ljs.load;
-      const originalConf = Object.assign({}, oc.conf);
+	test("should include globalParameters in the URL", async ({ page }) => {
+		// Setup mock and track the fetch call
+		const fetchResult = await page.evaluate(() => {
+			// Save original fetch, ljs.load, and config
+			const originalFetch = window.fetch;
+			const originalLjsLoad = ljs.load;
+			const originalConf = Object.assign({}, oc.conf);
 
 			// Set global parameters
 			oc.conf.globalParameters = {
 				test: "hello world & friends?",
 			};
 
-      // Track fetch calls
-      let fetchCalls = [];
-      window.fetch = function (url) {
-        fetchCalls.push({
-          url: url
-        });
+			// Track fetch calls
+			const fetchCalls = [];
+			window.fetch = (url) => {
+				fetchCalls.push({
+					url: url,
+				});
 
-        // Create a response object that mimics fetch Response
-        const mockResponse = {
-          ok: true,
-          headers: {
-            get: () => null
-          },
-          json: () => Promise.resolve(window.unRenderedResponse)
-        };
+				// Create a response object that mimics fetch Response
+				const mockResponse = {
+					ok: true,
+					headers: {
+						get: () => null,
+					},
+					json: () => Promise.resolve(window.unRenderedResponse),
+				};
 
-        return Promise.resolve(mockResponse);
-      };
+				return Promise.resolve(mockResponse);
+			};
 
 			// Mock ljs.load to prevent actual script loading
 			ljs.load = (url, cb) => {
@@ -151,68 +151,68 @@ test.describe("oc-client : renderByHref", () => {
 			// Execute the compiled view content to register the component
 			eval(window.compiledViewContent);
 
-      // Call the method being tested
-      return new Promise(resolve => {
-        oc.renderByHref(window.route, () => {
-          // Restore original functions and config
-          window.fetch = originalFetch;
-          ljs.load = originalLjsLoad;
-          oc.conf = originalConf;
+			// Call the method being tested
+			return new Promise((resolve) => {
+				oc.renderByHref(window.route, () => {
+					// Restore original functions and config
+					window.fetch = originalFetch;
+					ljs.load = originalLjsLoad;
+					oc.conf = originalConf;
 
-          // Return the captured fetch calls
-          resolve(fetchCalls);
-        });
-      });
-    });
+					// Return the captured fetch calls
+					resolve(fetchCalls);
+				});
+			});
+		});
 
-    // Verify the URL contains the properly encoded global parameters
-    expect(fetchResult[0].url).toEqual(
-      'http://my-registry.com/v3/a-component/1.2.X/?name=John&test=hello%20world%20%26%20friends%3F&__oc_Retry=0'
-    );
-  });
+		// Verify the URL contains the properly encoded global parameters
+		expect(fetchResult[0].url).toEqual(
+			"http://my-registry.com/v3/a-component/1.2.X/?name=John&test=hello%20world%20%26%20friends%3F&__oc_Retry=0",
+		);
+	});
 
-  test('should respond with the rendered html when registry returns unrendered component', async ({
-    page
-  }) => {
-    // Setup mock and execute renderByHref
-    const result = await page.evaluate(() => {
-      // Save original fetch and ljs.load
-      const originalFetch = window.fetch;
-      const originalLjsLoad = ljs.load;
+	test("should respond with the rendered html when registry returns unrendered component", async ({
+		page,
+	}) => {
+		// Setup mock and execute renderByHref
+		const result = await page.evaluate(() => {
+			// Save original fetch and ljs.load
+			const originalFetch = window.fetch;
+			const originalLjsLoad = ljs.load;
 
 			// First, make sure the component is registered
 			eval(window.compiledViewContent);
 
-      // Mock fetch to return unrendered response
-      window.fetch = function () {
-        // Create a response object that mimics fetch Response
-        const mockResponse = {
-          ok: true,
-          headers: {
-            get: () => null
-          },
-          json: () =>
-            Promise.resolve({
-              ...window.unRenderedResponse,
-              template: window.unRenderedResponse.template,
-              data: window.unRenderedResponse.data || {}
-            })
-        };
+			// Mock fetch to return unrendered response
+			window.fetch = () => {
+				// Create a response object that mimics fetch Response
+				const mockResponse = {
+					ok: true,
+					headers: {
+						get: () => null,
+					},
+					json: () =>
+						Promise.resolve({
+							...window.unRenderedResponse,
+							template: window.unRenderedResponse.template,
+							data: window.unRenderedResponse.data || {},
+						}),
+				};
 
-        return Promise.resolve(mockResponse);
-      };
+				return Promise.resolve(mockResponse);
+			};
 
 			// Mock ljs.load to prevent actual script loading
 			ljs.load = (url, cb) => {
 				cb(null, "ok");
 			};
 
-      // Call the method being tested
-      return new Promise(resolve => {
-        oc.renderByHref(window.route, (err, data) => {
-          // Restore original functions
-          window.fetch = originalFetch;
-          ljs.load = originalLjsLoad;
+			// Call the method being tested
+			return new Promise((resolve) => {
+				oc.renderByHref(window.route, (err, data) => {
+					// Restore original functions
+					window.fetch = originalFetch;
+					ljs.load = originalLjsLoad;
 
 					// Return the callback results
 					resolve({
@@ -230,16 +230,16 @@ test.describe("oc-client : renderByHref", () => {
 		expect(result.data.key).toEqual("46ee85c314b371cac60471cef5b2e2e6c443dccf");
 	});
 
-  test('should throw an error after multiple retries when getting component fails', async ({
-    page
-  }) => {
-    // Setup mock with failure but with a low retry count to avoid timeout
-    const result = await page.evaluate(() => {
-      // Save original fetch and ljs.load
-      const originalFetch = window.fetch;
-      const originalLjsLoad = ljs.load;
-      const originalConsoleLog = console.log;
-      let originalRetries;
+	test("should throw an error after multiple retries when getting component fails", async ({
+		page,
+	}) => {
+		// Setup mock with failure but with a low retry count to avoid timeout
+		const result = await page.evaluate(() => {
+			// Save original fetch and ljs.load
+			const originalFetch = window.fetch;
+			const originalLjsLoad = ljs.load;
+			const originalConsoleLog = console.log;
+			let originalRetries;
 
 			// Temporarily store and override the retry settings if they exist
 			if (oc.conf?.retries) {
@@ -254,27 +254,27 @@ test.describe("oc-client : renderByHref", () => {
 			// Suppress console logs
 			console.log = () => {};
 
-      // Count fetch calls
-      let callCount = 0;
+			// Count fetch calls
+			let callCount = 0;
 
-      // Mock fetch to always fail
-      window.fetch = function () {
-        callCount++;
-        return Promise.reject(new Error('Failed fetch'));
-      };
+			// Mock fetch to always fail
+			window.fetch = () => {
+				callCount++;
+				return Promise.reject(new Error("Failed fetch"));
+			};
 
 			// Mock ljs.load to prevent actual script loading
 			ljs.load = (url, cb) => {
 				cb(null, "ok");
 			};
 
-      // Call the method being tested
-      return new Promise(resolve => {
-        oc.renderByHref(window.route, err => {
-          // Restore original functions and settings
-          window.fetch = originalFetch;
-          ljs.load = originalLjsLoad;
-          console.log = originalConsoleLog;
+			// Call the method being tested
+			return new Promise((resolve) => {
+				oc.renderByHref(window.route, (err) => {
+					// Restore original functions and settings
+					window.fetch = originalFetch;
+					ljs.load = originalLjsLoad;
+					console.log = originalConsoleLog;
 
 					// Restore original retries setting if it existed
 					if (originalRetries !== undefined) {

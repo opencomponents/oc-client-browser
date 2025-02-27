@@ -16,30 +16,30 @@ export function createOc(oc) {
 		}
 	};
 
-  // The code
-  let $,
-    $document = document,
-    $window = window,
-    noop = () => {},
-    initialised = false,
-    initialising = false,
-    retries = {},
-    isBool = a => typeof a == 'boolean',
-    timeout = setTimeout,
-    ocCmd = oc.cmd,
-    ocConf = oc.conf,
-    renderedComponents = oc.renderedComponents,
-    dataRenderedAttribute = 'data-rendered',
-    dataRenderingAttribute = 'data-rendering',
-    logError = msg => console.log(msg),
-    logInfo = msg => ocConf.debug && console.log(msg),
-    handleFetchResponse = response => {
-      if (!response.ok) throw response;
-      if (response.headers.get('Content-Type') !== 'x-text/stream')
-        return response.json();
+	// The code
+	let $,
+		$document = document,
+		$window = window,
+		noop = () => {},
+		initialised = false,
+		initialising = false,
+		retries = {},
+		isBool = (a) => typeof a == "boolean",
+		timeout = setTimeout,
+		ocCmd = oc.cmd,
+		ocConf = oc.conf,
+		renderedComponents = oc.renderedComponents,
+		dataRenderedAttribute = "data-rendered",
+		dataRenderingAttribute = "data-rendering",
+		logError = (msg) => console.log(msg),
+		logInfo = (msg) => ocConf.debug && console.log(msg),
+		handleFetchResponse = (response) => {
+			if (!response.ok) throw response;
+			if (response.headers.get("Content-Type") !== "x-text/stream")
+				return response.json();
 
-      return oc._decode(response.body).then(decoded => decoded.value);
-    };
+			return oc._decode(response.body).then((decoded) => decoded.value);
+		};
 
 	// constants
 	const RETRY_INTERVAL =
@@ -215,62 +215,64 @@ export function createOc(oc) {
 		callback();
 	};
 
-  let getData = (options, cb) => {
-    cb = cb || noop;
-    let version = options.version,
-      baseUrl = options.baseUrl,
-      name = options.name,
-      json = options.json;
-    isRequired('version', version);
-    isRequired('baseUrl', baseUrl);
-    isRequired('name', name);
-    let jsonRequest = isBool(json) ? json : JSON_REQUESTS;
-    let data = {
-      components: [
-        {
-          action: options.action,
-          name: name,
-          version: version,
-          parameters: $.extend({}, ocConf.globalParameters, options.parameters)
-        }
-      ]
-    };
-    let headers = getHeaders();
+	const getData = (options, cb) => {
+		cb = cb || noop;
+		const version = options.version,
+			baseUrl = options.baseUrl,
+			name = options.name,
+			json = options.json;
+		isRequired("version", version);
+		isRequired("baseUrl", baseUrl);
+		isRequired("name", name);
+		const jsonRequest = isBool(json) ? json : JSON_REQUESTS;
+		const data = {
+			components: [
+				{
+					action: options.action,
+					name: name,
+					version: version,
+					parameters: $.extend({}, ocConf.globalParameters, options.parameters),
+				},
+			],
+		};
+		const headers = getHeaders();
 
-    if (jsonRequest) {
-      headers['Content-Type'] = 'application/json';
-    }
+		if (jsonRequest) {
+			headers["Content-Type"] = "application/json";
+		}
 
-    fetch(baseUrl, {
-      method: 'POST',
-      headers: headers,
-      body: jsonRequest ? JSON.stringify(data) : $.param(data)
-    })
-      .then(handleFetchResponse)
-      .then(apiResponse => {
-        if (!options.action) {
-          let response = apiResponse[0].response;
-          let err = response.error ? response.details || response.error : null;
-          cb(err, response.data, apiResponse[0]);
-        } else {
-          cb(null, apiResponse.data);
-        }
-      })
-      .catch(cb);
-  };
-  oc.getData = getData;
-  oc.getAction = options => {
-    return new Promise((resolve, reject) => {
-      let name = options.component;
-      getData(
-        $.extend(
-          {
-            json: true,
-            name: name
-          },
-          renderedComponents[name],
-          options
-        ),
+		fetch(baseUrl, {
+			method: "POST",
+			headers: headers,
+			body: jsonRequest ? JSON.stringify(data) : $.param(data),
+		})
+			.then(handleFetchResponse)
+			.then((apiResponse) => {
+				if (!options.action) {
+					const response = apiResponse[0].response;
+					const err = response.error
+						? response.details || response.error
+						: null;
+					cb(err, response.data, apiResponse[0]);
+				} else {
+					cb(null, apiResponse.data);
+				}
+			})
+			.catch(cb);
+	};
+	oc.getData = getData;
+	oc.getAction = (options) => {
+		return new Promise((resolve, reject) => {
+			const name = options.component;
+			getData(
+				$.extend(
+					{
+						json: true,
+						name: name,
+					},
+					renderedComponents[name],
+					options,
+				),
 
 				(err, data) => {
 					if (err) {
@@ -482,73 +484,74 @@ export function createOc(oc) {
 		const id = hrefOrOptions.id || ocId;
 		const element = hrefOrOptions.element;
 
-    oc.ready(() => {
-      if (!href) {
-        callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
-      } else {
-        fetch(
-          addParametersToHref(
-            href,
-            $.extend(
-              {},
-              ocConf.globalParameters,
-              RETRY_SEND_NUMBER && { __oc_Retry: retryNumber }
-            )
-          ),
-          {
-            headers: getHeaders()
-          }
-        )
-          .then(handleFetchResponse)
-          .then(apiResponse => {
-            var template = apiResponse.template;
-            apiResponse.data.id = ocId;
-            apiResponse.data.element = element;
-            oc.render(template, apiResponse.data, (err, html) => {
-              if (err) {
-                callback(
-                  interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) + err
-                );
-              } else {
-                logInfo(interpolate(MESSAGES_RENDERED, template.src));
-                callback(null, {
-                  id: id,
-                  ocId: ocId,
-                  html: html,
-                  baseUrl: apiResponse.baseUrl,
-                  key: template.key,
-                  version: apiResponse.version,
-                  name: apiResponse.name
-                });
-              }
-            });
-          })
-          .catch(err => {
-            if (err && err.status == 429) {
-              retries[href] = 0;
-            }
-            logError(MESSAGES_ERRORS_RETRIEVING);
-            retry(
-              href,
-              requestNumber => {
-                oc.renderByHref(
-                  {
-                    href: href,
-                    retryNumber: requestNumber,
-                    id: id,
-                    element: element
-                  },
-                  callback
-                );
-              },
-              () => {
-                callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
-              }
-            );
-          });
-      }
-    });
-  };
+		oc.ready(() => {
+			if (!href) {
+				callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
+			} else {
+				fetch(
+					addParametersToHref(
+						href,
+						$.extend(
+							{},
+							ocConf.globalParameters,
+							RETRY_SEND_NUMBER && { __oc_Retry: retryNumber },
+						),
+					),
+					{
+						headers: getHeaders(),
+					},
+				)
+					.then(handleFetchResponse)
+					.then((apiResponse) => {
+						const template = apiResponse.template;
+						apiResponse.data.id = ocId;
+						apiResponse.data.element = element;
+						oc.render(template, apiResponse.data, (err, html) => {
+							if (err) {
+								callback(
+									interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) +
+										err,
+								);
+							} else {
+								logInfo(interpolate(MESSAGES_RENDERED, template.src));
+								callback(null, {
+									id: id,
+									ocId: ocId,
+									html: html,
+									baseUrl: apiResponse.baseUrl,
+									key: template.key,
+									version: apiResponse.version,
+									name: apiResponse.name,
+								});
+							}
+						});
+					})
+					.catch((err) => {
+						if (err && err.status == 429) {
+							retries[href] = 0;
+						}
+						logError(MESSAGES_ERRORS_RETRIEVING);
+						retry(
+							href,
+							(requestNumber) => {
+								oc.renderByHref(
+									{
+										href: href,
+										retryNumber: requestNumber,
+										id: id,
+										element: element,
+									},
+									callback,
+								);
+							},
+							() => {
+								callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
+							},
+						);
+					});
+			}
+		});
+	};
 
 	oc.renderUnloadedComponents = () => {
 		oc.ready(() => {

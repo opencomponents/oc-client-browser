@@ -46,20 +46,20 @@ test.describe("oc-client : renderUnloadedComponents", () => {
 				view: 'oc.components=oc.components||{},oc.components["97f07144341a214735c4cec85b002c4c8f394455"]=function(c){var o=[];return o.push("<div>this is a component</div>"),o.join("")};',
 			};
 
-      // Store original functions to restore later
-      window.originalFetch = window.fetch;
-      window.originalConsoleLog = console.log;
-      window.originalLjsLoad = ljs.load;
-    });
-  });
+			// Store original functions to restore later
+			window.originalFetch = window.fetch;
+			window.originalConsoleLog = console.log;
+			window.originalLjsLoad = ljs.load;
+		});
+	});
 
-  test.afterEach(async ({ page }) => {
-    // Clean up after each test
-    await page.evaluate(() => {
-      // Restore original functions
-      window.fetch = window.originalFetch;
-      console.log = window.originalConsoleLog;
-      ljs.load = window.originalLjsLoad;
+	test.afterEach(async ({ page }) => {
+		// Clean up after each test
+		await page.evaluate(() => {
+			// Restore original functions
+			window.fetch = window.originalFetch;
+			console.log = window.originalConsoleLog;
+			ljs.load = window.originalLjsLoad;
 
 			// Clean up oc state
 			oc.events.reset();
@@ -69,41 +69,41 @@ test.describe("oc-client : renderUnloadedComponents", () => {
 			// Remove components from DOM
 			oc.$("body").find("oc-component").remove();
 
-      // Clean up test variables
-      delete window.aComponent;
-      delete window.anotherComponent;
-      delete window.originalFetch;
-      delete window.originalConsoleLog;
-      delete window.originalLjsLoad;
-      delete window.eventData;
-    });
-  });
+			// Clean up test variables
+			delete window.aComponent;
+			delete window.anotherComponent;
+			delete window.originalFetch;
+			delete window.originalConsoleLog;
+			delete window.originalLjsLoad;
+			delete window.eventData;
+		});
+	});
 
-  test('should render all unloaded components and fire events correctly', async ({
-    page
-  }) => {
-    const result = await page.evaluate(() => {
-      return new Promise(resolve => {
-        // Mock fetch
-        window.fetch = function (url, options) {
-          const isAnother = url.indexOf('another') > 0;
-          console.log('GET', url);
+	test("should render all unloaded components and fire events correctly", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(() => {
+			return new Promise((resolve) => {
+				// Mock fetch
+				window.fetch = (url, options) => {
+					const isAnother = url.indexOf("another") > 0;
+					console.log("GET", url);
 
-          // Create a response object that mimics fetch Response
-          const mockResponse = {
-            ok: true,
-            headers: {
-              get: () => null
-            },
-            json: () =>
-              Promise.resolve(
-                (isAnother ? window.anotherComponent : window.aComponent)
-                  .response
-              )
-          };
+					// Create a response object that mimics fetch Response
+					const mockResponse = {
+						ok: true,
+						headers: {
+							get: () => null,
+						},
+						json: () =>
+							Promise.resolve(
+								(isAnother ? window.anotherComponent : window.aComponent)
+									.response,
+							),
+					};
 
-          return Promise.resolve(mockResponse);
-        };
+					return Promise.resolve(mockResponse);
+				};
 
 				// Mock ljs.load
 				ljs.load = (url, cb) => {
