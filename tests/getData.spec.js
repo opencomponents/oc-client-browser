@@ -1,62 +1,62 @@
 // @ts-check
-import { test, expect } from '@playwright/test';
+import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+	await page.goto("/");
 });
 
-test.describe('oc-client : getData', () => {
-  test('should throw when requesting data without baseUrl', async ({
-    page
-  }) => {
-    const result = await page.evaluate(() => {
-      try {
-        oc.getData({ name: 'someName', version: '0.0.1' });
-        return { success: true };
-      } catch (error) {
-        return { success: false, message: error.message || error };
-      }
-    });
+test.describe("oc-client : getData", () => {
+	test("should throw when requesting data without baseUrl", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(() => {
+			try {
+				oc.getData({ name: "someName", version: "0.0.1" });
+				return { success: true };
+			} catch (error) {
+				return { success: false, message: error.message || error };
+			}
+		});
 
-    expect(result.success).toBeFalsy();
-    expect(result.message).toEqual('baseUrl parameter is required');
-  });
+		expect(result.success).toBeFalsy();
+		expect(result.message).toEqual("baseUrl parameter is required");
+	});
 
-  test('should throw when requesting data without name', async ({ page }) => {
-    const result = await page.evaluate(() => {
-      try {
-        oc.getData({
-          baseUrl: 'http://www.opencomponents.com',
-          version: '0.0.1'
-        });
-        return { success: true };
-      } catch (error) {
-        return { success: false, message: error.message || error };
-      }
-    });
+	test("should throw when requesting data without name", async ({ page }) => {
+		const result = await page.evaluate(() => {
+			try {
+				oc.getData({
+					baseUrl: "http://www.opencomponents.com",
+					version: "0.0.1",
+				});
+				return { success: true };
+			} catch (error) {
+				return { success: false, message: error.message || error };
+			}
+		});
 
-    expect(result.success).toBeFalsy();
-    expect(result.message).toEqual('name parameter is required');
-  });
+		expect(result.success).toBeFalsy();
+		expect(result.message).toEqual("name parameter is required");
+	});
 
-  test('should throw when requesting data without version', async ({
-    page
-  }) => {
-    const result = await page.evaluate(() => {
-      try {
-        oc.getData({
-          baseUrl: 'http://www.opencomponents.com',
-          name: 'a-component'
-        });
-        return { success: true };
-      } catch (error) {
-        return { success: false, message: error.message || error };
-      }
-    });
+	test("should throw when requesting data without version", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(() => {
+			try {
+				oc.getData({
+					baseUrl: "http://www.opencomponents.com",
+					name: "a-component",
+				});
+				return { success: true };
+			} catch (error) {
+				return { success: false, message: error.message || error };
+			}
+		});
 
-    expect(result.success).toBeFalsy();
-    expect(result.message).toEqual('version parameter is required');
-  });
+		expect(result.success).toBeFalsy();
+		expect(result.message).toEqual("version parameter is required");
+	});
 
   test('should make fetch request with correct parameters', async ({
     page
@@ -106,16 +106,16 @@ test.describe('oc-client : getData', () => {
             // Restore original fetch
             window.fetch = originalFetch;
 
-            // Resolve with captured data and results
-            resolve({
-              requestData: requestData,
-              callbackError: err,
-              callbackData: data
-            });
-          }
-        );
-      });
-    });
+						// Resolve with captured data and results
+						resolve({
+							requestData: requestData,
+							callbackError: err,
+							callbackData: data,
+						});
+					},
+				);
+			});
+		});
 
     // Verify the fetch request
     expect(fetchMockResult.requestData.method).toEqual('POST');
@@ -189,19 +189,19 @@ test.describe('oc-client : getData', () => {
             // Restore original fetch
             window.fetch = originalFetch;
 
-            // Resolve with the error
-            resolve({
-              callbackError: err,
-              callbackData: data
-            });
-          }
-        );
-      });
-    });
+						// Resolve with the error
+						resolve({
+							callbackError: err,
+							callbackData: data,
+						});
+					},
+				);
+			});
+		});
 
-    // Verify error was passed to callback
-    expect(errorResult.callbackError).toEqual('details about oups');
-  });
+		// Verify error was passed to callback
+		expect(errorResult.callbackError).toEqual("details about oups");
+	});
 
   test('should call the callback with server.js error if no details are available', async ({
     page
@@ -239,19 +239,19 @@ test.describe('oc-client : getData', () => {
             // Restore original fetch
             window.fetch = originalFetch;
 
-            // Resolve with the error
-            resolve({
-              callbackError: err,
-              callbackData: data
-            });
-          }
-        );
-      });
-    });
+						// Resolve with the error
+						resolve({
+							callbackError: err,
+							callbackData: data,
+						});
+					},
+				);
+			});
+		});
 
-    // Verify error was passed to callback
-    expect(errorResult.callbackError).toEqual('oups');
-  });
+		// Verify error was passed to callback
+		expect(errorResult.callbackError).toEqual("oups");
+	});
 
   test('should handle JSON requests correctly', async ({ page }) => {
     const jsonResult = await page.evaluate(() => {
@@ -297,14 +297,14 @@ test.describe('oc-client : getData', () => {
             // Restore original fetch
             window.fetch = originalFetch;
 
-            // Resolve with captured data
-            resolve({
-              requestData: requestData
-            });
-          }
-        );
-      });
-    });
+						// Resolve with captured data
+						resolve({
+							requestData: requestData,
+						});
+					},
+				);
+			});
+		});
 
     // Verify JSON request
     expect(jsonResult.requestData.body).toEqual(
@@ -321,10 +321,10 @@ test.describe('oc-client : getData', () => {
       const originalFetch = window.fetch;
       const originalConf = Object.assign({}, oc.conf);
 
-      // Set global parameters
-      oc.conf.globalParameters = {
-        test: 'value'
-      };
+			// Set global parameters
+			oc.conf.globalParameters = {
+				test: "value",
+			};
 
       // Create a mock that captures the request
       let requestData = null;
@@ -374,23 +374,23 @@ test.describe('oc-client : getData', () => {
             window.fetch = originalFetch;
             oc.conf = originalConf;
 
-            // Resolve with captured data
-            resolve({
-              requestData: requestData
-            });
-          }
-        );
-      });
-    });
+						// Resolve with captured data
+						resolve({
+							requestData: requestData,
+						});
+					},
+				);
+			});
+		});
 
-    // Verify global parameters were included
-    expect(
-      globalParamsResult.requestData.data.components[0].parameters.name
-    ).toEqual('evil');
-    expect(
-      globalParamsResult.requestData.data.components[0].parameters.test
-    ).toEqual('value');
-  });
+		// Verify global parameters were included
+		expect(
+			globalParamsResult.requestData.data.components[0].parameters.name,
+		).toEqual("evil");
+		expect(
+			globalParamsResult.requestData.data.components[0].parameters.test,
+		).toEqual("value");
+	});
 
   test('should include global headers in the request', async ({ page }) => {
     const globalHeadersResult = await page.evaluate(() => {
@@ -398,10 +398,10 @@ test.describe('oc-client : getData', () => {
       const originalFetch = window.fetch;
       const originalConf = Object.assign({}, oc.conf);
 
-      // Set global headers
-      oc.conf.globalHeaders = {
-        testHeader: 'headerValue'
-      };
+			// Set global headers
+			oc.conf.globalHeaders = {
+				testHeader: "headerValue",
+			};
 
       // Create a mock that captures the request
       let requestData = null;
@@ -441,20 +441,20 @@ test.describe('oc-client : getData', () => {
             window.fetch = originalFetch;
             oc.conf = originalConf;
 
-            // Resolve with captured data
-            resolve({
-              requestData: requestData
-            });
-          }
-        );
-      });
-    });
+						// Resolve with captured data
+						resolve({
+							requestData: requestData,
+						});
+					},
+				);
+			});
+		});
 
-    // Verify global headers were included
-    expect(globalHeadersResult.requestData.headers.testHeader).toEqual(
-      'headerValue'
-    );
-  });
+		// Verify global headers were included
+		expect(globalHeadersResult.requestData.headers.testHeader).toEqual(
+			"headerValue",
+		);
+	});
 
   test('should support global headers as a function', async ({ page }) => {
     const globalHeadersFnResult = await page.evaluate(() => {
@@ -462,12 +462,10 @@ test.describe('oc-client : getData', () => {
       const originalFetch = window.fetch;
       const originalConf = Object.assign({}, oc.conf);
 
-      // Set global headers as a function
-      oc.conf.globalHeaders = function () {
-        return {
-          testHeader: 'headerValue'
-        };
-      };
+			// Set global headers as a function
+			oc.conf.globalHeaders = () => ({
+				testHeader: "headerValue",
+			});
 
       // Create a mock that captures the request
       let requestData = null;
@@ -507,14 +505,14 @@ test.describe('oc-client : getData', () => {
             window.fetch = originalFetch;
             oc.conf = originalConf;
 
-            // Resolve with captured data
-            resolve({
-              requestData: requestData
-            });
-          }
-        );
-      });
-    });
+						// Resolve with captured data
+						resolve({
+							requestData: requestData,
+						});
+					},
+				);
+			});
+		});
 
     // Verify global headers from function were included
     expect(globalHeadersFnResult.requestData.headers.testHeader).toEqual(
