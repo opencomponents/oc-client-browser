@@ -1,8 +1,8 @@
-import { createOc } from './oc-client';
-import { LJS } from './loader';
+import { LJS } from "./loader";
+import { createOc } from "./oc-client";
 
-let oc = window.oc || {};
-let ljs = new LJS();
+const oc = window.oc || {};
+const ljs = new LJS();
 window.ljs = ljs;
 
 window.oc = createOc(oc);
