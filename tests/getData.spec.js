@@ -131,9 +131,9 @@ test.describe("oc-client : getData", () => {
 		if (bodyData instanceof URLSearchParams) {
 			// Handle URL-encoded body
 			const componentsParam = JSON.parse(bodyData.get("components"));
-			expect(componentsParam[0].name).toEqual("myComponent");
-			expect(componentsParam[0].version).toEqual("6.6.6");
-			expect(componentsParam[0].parameters.name).toEqual("evil");
+			expect(bodyData.get("components[0][name]")).toEqual("myComponent");
+			expect(bodyData.get("components[0][version]")).toEqual("6.6.6");
+			expect(bodyData.get("components[0][parameters][name]")).toEqual("evil");
 		} else {
 			// Handle JSON body
 			expect(bodyData.components[0].name).toEqual("myComponent");
@@ -336,7 +336,10 @@ test.describe("oc-client : getData", () => {
 				} else {
 					// Create a simple parser for url-encoded data
 					const params = new URLSearchParams(options.body);
-					bodyData = { components: JSON.parse(params.get("components")) };
+					const name = params.get("components[0][parameters][name]");
+					const test = params.get("components[0][parameters][test]");
+
+					bodyData = { components: [{ parameters: { name, test } }] };
 				}
 
 				requestData = {
