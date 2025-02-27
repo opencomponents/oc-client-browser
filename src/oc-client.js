@@ -108,7 +108,7 @@ export function createOc(oc) {
 
 	const reanimateScripts = (component) => {
 		for (const script of Array.from(component.querySelectorAll("script"))) {
-			const newScript = document.createElement("script");
+			const newScript = $document.createElement("script");
 			newScript.textContent = script.textContent;
 			for (const attribute of Array.from(script.attributes)) {
 				newScript.setAttribute(attribute.name, attribute.value);
@@ -126,9 +126,9 @@ export function createOc(oc) {
 	};
 
 	oc.addStylesToHead = (styles) => {
-		const style = document.createElement("style");
+		const style = $document.createElement("style");
 		style.textContent = styles;
-		document.head.appendChild(style);
+		$document.head.appendChild(style);
 	};
 
 	const loadAfterReady = () => {
@@ -351,14 +351,43 @@ export function createOc(oc) {
 				initialising = false;
 
 				oc.events = (() => {
-					const obj = $({});
+					let listeners = {};
 
 					return {
-						fire: obj.trigger.bind(obj),
-						on: obj.on.bind(obj),
-						off: obj.off.bind(obj),
-						reset: () => {
-							obj.off();
+						fire(key, data) {
+							if (listeners[key]) {
+								for (const cb of listeners[key]) {
+									cb(data, data);
+								}
+							}
+						},
+						on(key, cb) {
+							if (!cb) {
+								throw new Error("Callback is required");
+							}
+							if (!listeners[key]) {
+								listeners[key] = [];
+							}
+							listeners[key].push(cb);
+						},
+						off(events, handler) {
+							if (typeof events === "string") {
+								events = [events];
+							}
+							for (const event of events) {
+								if (listeners[event]) {
+									if (handler) {
+										listeners[event] = listeners[event].filter(
+											(cb) => cb !== handler,
+										);
+									} else {
+										delete listeners[event];
+									}
+								}
+							}
+						},
+						reset() {
+							listeners = {};
 						},
 					};
 				})();
@@ -569,7 +598,7 @@ export function createOc(oc) {
 
 	oc.renderUnloadedComponents = () => {
 		oc.ready(() => {
-			const unloadedComponents = document.querySelectorAll(
+			const unloadedComponents = $document.querySelectorAll(
 				`${OC_TAG}:not([data-rendered="true"]):not([data-failed="true"])`,
 			);
 
