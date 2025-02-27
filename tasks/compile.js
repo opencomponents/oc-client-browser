@@ -78,6 +78,7 @@ function getFiles({ sync = false, conf }) {
 
   const lPath = path.join(__dirname, vendorPath, 'l.js');
   const ocClientPath = path.join(__dirname, srcPath, 'oc-client.js');
+  // comment
   const replaceGlobals = x =>
     x
       .replaceAll(
