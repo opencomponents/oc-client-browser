@@ -555,13 +555,13 @@ export function createOc(oc) {
 
 	oc.renderUnloadedComponents = () => {
 		oc.ready(() => {
-			const $unloadedComponents = $(
-				OC_TAG + "[data-rendered!=true][data-failed!=true]",
+			const unloadedComponents = document.querySelectorAll(
+				`${OC_TAG}:not([data-rendered="true"]):not([data-failed="true"])`,
 			);
 
-			$unloadedComponents.map((idx, unloadedComponent) => {
+			unloadedComponents.forEach((unloadedComponent, idx) => {
 				oc.renderNestedComponent(unloadedComponent, () => {
-					if (idx == $unloadedComponents.length - 1) {
+					if (idx == unloadedComponents.length - 1) {
 						oc.renderUnloadedComponents();
 					}
 				});
