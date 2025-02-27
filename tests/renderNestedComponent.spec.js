@@ -7,7 +7,6 @@ test.beforeEach(async ({ page }) => {
 
 test.describe("oc-client : renderNestedComponent", () => {
 	const componentHref = "//oc-registry.com/my-component/";
-	const componentContainer = `<oc-component href="${componentHref}"></oc-component>`;
 
 	test.beforeEach(async ({ page }) => {
 		// Set up the test environment
@@ -17,12 +16,11 @@ test.describe("oc-client : renderNestedComponent", () => {
 				window.originalRenderByHref = oc.renderByHref;
 				window.originalConsoleLog = console.log;
 				window.componentHref = config.componentHref;
-				window.componentContainer = config.componentContainer;
 
 				// Suppress console logs
 				console.log = () => {};
 			},
-			{ componentHref, componentContainer },
+			{ componentHref },
 		);
 	});
 
@@ -43,7 +41,6 @@ test.describe("oc-client : renderNestedComponent", () => {
 			delete window.originalConsoleLog;
 			delete window.htmlBeforeRendering;
 			delete window.componentHref;
-			delete window.componentContainer;
 			delete window.failedEvent;
 		});
 	});
@@ -91,12 +88,13 @@ test.describe("oc-client : renderNestedComponent", () => {
 			(config) => {
 				return new Promise((resolve) => {
 					// Create jQuery component
-					const $component = oc.$(config.componentContainer);
-					document.body.appendChild($component[0]);
+					const component = document.createElement("oc-component");
+					component.setAttribute("href", config.componentHref);
+					document.body.appendChild(component);
 
 					// Mock renderByHref
 					oc.renderByHref = (href, cb) => {
-						window.htmlBeforeRendering = $component.html();
+						window.htmlBeforeRendering = component.innerHTML;
 						cb(null, {
 							html: "<div>this is the component content</div>",
 							version: "1.0.0",
@@ -106,20 +104,20 @@ test.describe("oc-client : renderNestedComponent", () => {
 					};
 
 					// Call the function being tested
-					oc.renderNestedComponent($component, () => {
+					oc.renderNestedComponent(component, () => {
 						const data = {
 							htmlBeforeRendering: window.htmlBeforeRendering,
-							finalHtml: $component.html(),
+							finalHtml: component.innerHTML,
 						};
 
 						// Clean up DOM
-						$component.remove();
+						component.remove();
 
 						resolve(data);
 					});
 				});
 			},
-			{ componentContainer },
+			{ componentHref },
 		);
 
 		// Verify the results
@@ -133,9 +131,9 @@ test.describe("oc-client : renderNestedComponent", () => {
 		const failureResult = await page.evaluate(
 			(config) => {
 				return new Promise((resolve) => {
-					// Create jQuery component
-					const $component = oc.$(config.componentContainer);
-					document.body.appendChild($component[0]);
+					const component = document.createElement("oc-component");
+					component.setAttribute("href", config.componentHref);
+					document.body.appendChild(component);
 
 					// Set up event listener for failed event
 					window.failedEvent = null;
@@ -145,29 +143,29 @@ test.describe("oc-client : renderNestedComponent", () => {
 
 					// Mock renderByHref with error
 					oc.renderByHref = (href, cb) => {
-						window.htmlBeforeRendering = $component.html();
+						window.htmlBeforeRendering = component.innerHTML;
 						cb("An error!", null);
 					};
 
 					// Call the function being tested
-					oc.renderNestedComponent($component, () => {
+					oc.renderNestedComponent(component, () => {
 						const data = {
 							htmlBeforeRendering: window.htmlBeforeRendering,
-							finalHtml: $component.html(),
-							dataRendering: $component.attr("data-rendering"),
-							dataRendered: $component.attr("data-rendered"),
-							dataFailed: $component.attr("data-failed"),
+							finalHtml: component.innerHTML,
+							dataRendering: component.getAttribute("data-rendering"),
+							dataRendered: component.getAttribute("data-rendered"),
+							dataFailed: component.getAttribute("data-failed"),
 							failedEvent: window.failedEvent,
 						};
 
 						// Clean up DOM
-						$component.remove();
+						component.remove();
 
 						resolve(data);
 					});
 				});
 			},
-			{ componentContainer },
+			{ componentHref },
 		);
 
 		// Verify the results

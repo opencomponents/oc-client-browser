@@ -17,8 +17,7 @@ export function createOc(oc) {
 	};
 
 	// The code
-	let $,
-		$document = document,
+	let $document = document,
 		$window = window,
 		noop = () => {},
 		initialised = false,
@@ -403,15 +402,7 @@ export function createOc(oc) {
 				};
 			};
 
-			oc.requireSeries(externals, (deps) => {
-				const jQuery = deps[0];
-				if ($window.jQuery || $window.$) {
-					$ = oc.$ = jQuery;
-				} else {
-					$ = oc.$ = jQuery.noConflict();
-				}
-				done();
-			});
+			oc.requireSeries(externals, done);
 		}
 	};
 
