@@ -51,7 +51,6 @@ export function createOc(oc) {
 		RETRY_SEND_NUMBER = ocConf.retrySendNumber || true,
 		POLLING_INTERVAL = ocConf.pollingInterval || 500,
 		OC_TAG = ocConf.tag || "oc-component",
-		JSON_REQUESTS = !!ocConf.jsonRequests,
 		MESSAGES_ERRORS_HREF_MISSING = "Href parameter missing",
 		MESSAGES_ERRORS_RETRY_FAILED =
 			"Failed to load % component " + RETRY_LIMIT + " times. Giving up",
@@ -103,7 +102,9 @@ export function createOc(oc) {
 	};
 
 	const addParametersToHref = (href, parameters) => {
-		return href + (~href.indexOf("?") ? "&" : "?") + $.param(parameters);
+		return (
+			href + (~href.indexOf("?") ? "&" : "?") + new URLSearchParams(parameters)
+		);
 	};
 
 	const reanimateScripts = (component) => {
@@ -121,6 +122,7 @@ export function createOc(oc) {
 		const globalHeaders = ocConf.globalHeaders;
 		return {
 			Accept: "application/vnd.oc.unrendered+json",
+			"Content-Type": "application/json",
 			...(typeof globalHeaders == "function" ? globalHeaders() : globalHeaders),
 		};
 	};
@@ -239,7 +241,6 @@ export function createOc(oc) {
 		isRequired("version", version);
 		isRequired("baseUrl", baseUrl);
 		isRequired("name", name);
-		const jsonRequest = isBool(json) ? json : JSON_REQUESTS;
 		const data = {
 			components: [
 				{
@@ -252,14 +253,10 @@ export function createOc(oc) {
 		};
 		const headers = getHeaders();
 
-		if (jsonRequest) {
-			headers["Content-Type"] = "application/json";
-		}
-
 		fetch(baseUrl, {
 			method: "POST",
 			headers: headers,
-			body: jsonRequest ? JSON.stringify(data) : $.param(data),
+			body: JSON.stringify(data),
 		})
 			.then(handleFetchResponse)
 			.then((apiResponse) => {
