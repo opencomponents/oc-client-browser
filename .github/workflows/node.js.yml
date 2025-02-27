@@ -26,6 +26,10 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - name: Install OpenSSL dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libssl-dev
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
