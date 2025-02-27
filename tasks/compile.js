@@ -77,7 +77,7 @@ function getFiles({ sync = false, conf }) {
   const vendorPath = '../vendor/';
 
   const lPath = path.join(__dirname, vendorPath, 'l.js');
-  const turboPath = path.join(__dirname, vendorPath, 'turbo.js');
+  const turboPath = path.join(__dirname, vendorPath, 'turbostream.js');
   const ocClientPath = path.join(__dirname, srcPath, 'oc-client.js');
   const replaceGlobals = x =>
     x
