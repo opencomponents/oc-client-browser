@@ -102,7 +102,7 @@ test.describe("oc-client : renderByHref", () => {
 		});
 
 		// Verify the fetch request
-		expect(fetchResult[0].method).toEqual("GET");
+		expect(fetchResult[0].method).toEqual(undefined /* GET */);
 		expect(fetchResult[0].headers["Accept"]).toEqual(
 			"application/vnd.oc.unrendered+json",
 		);

@@ -376,7 +376,7 @@ test.describe("oc-client : getData", () => {
 
 						// Resolve with captured data
 						resolve({
-							requestData: requestData,
+							requestData,
 						});
 					},
 				);
