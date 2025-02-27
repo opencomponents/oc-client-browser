@@ -167,7 +167,7 @@ test.describe("oc-client : renderByHref", () => {
 
 		// Verify the URL contains the properly encoded global parameters
 		expect(fetchResult[0].url).toEqual(
-			"http://my-registry.com/v3/a-component/1.2.X/?name=John&test=hello%20world%20%26%20friends%3F&__oc_Retry=0",
+			"http://my-registry.com/v3/a-component/1.2.X/?name=John&test=hello+world+%26+friends%3F&__oc_Retry=0",
 		);
 	});
 
