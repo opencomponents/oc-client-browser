@@ -67,7 +67,7 @@ test.describe("oc-client : renderUnloadedComponents", () => {
 			oc.renderedComponents = {};
 
 			// Remove components from DOM
-			oc.$("body").find("oc-component").remove();
+			document.querySelector("oc-component").remove();
 
 			// Clean up test variables
 			delete window.aComponent;
@@ -111,23 +111,25 @@ test.describe("oc-client : renderUnloadedComponents", () => {
 				};
 
 				// Suppress console logs
-				// console.log = function () {};
+				console.log = () => {};
 
 				// Add components to the DOM
-				const aComponentHtml =
-					'<oc-component href="' +
-					window.aComponent.response.href +
-					'"></oc-component>';
-				const anotherComponentHtml =
-					'<oc-component href="' +
-					window.anotherComponent.response.href +
-					'"></oc-component>';
-				const failedComponent =
-					'<oc-component href="" data-failed="true"></oc-component>';
+				const aComponentHtml = document.createElement("oc-component");
+				aComponentHtml.setAttribute("href", window.aComponent.response.href);
 
-				oc.$("body").append(aComponentHtml);
-				oc.$("body").append(anotherComponentHtml);
-				oc.$("body").append(failedComponent);
+				const anotherComponentHtml = document.createElement("oc-component");
+				anotherComponentHtml.setAttribute(
+					"href",
+					window.anotherComponent.response.href,
+				);
+
+				const failedComponent = document.createElement("oc-component");
+				failedComponent.setAttribute("href", "");
+				failedComponent.setAttribute("data-failed", true);
+
+				document.body.appendChild(aComponentHtml);
+				document.body.appendChild(anotherComponentHtml);
+				document.body.appendChild(failedComponent);
 
 				// Register component views
 				eval(window.aComponent.view);
