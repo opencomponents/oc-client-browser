@@ -108,10 +108,10 @@ export function createOc(oc) {
 
 	const getHeaders = () => {
 		const globalHeaders = ocConf.globalHeaders;
-		return $.extend(
-			{ Accept: "application/vnd.oc.unrendered+json" },
-			typeof globalHeaders == "function" ? globalHeaders() : globalHeaders,
-		);
+		return {
+			Accept: "application/vnd.oc.unrendered+json",
+			...(typeof globalHeaders == "function" ? globalHeaders() : globalHeaders),
+		};
 	};
 
 	oc.addStylesToHead = (styles) => {
@@ -231,7 +231,7 @@ export function createOc(oc) {
 					action: options.action,
 					name: name,
 					version: version,
-					parameters: $.extend({}, ocConf.globalParameters, options.parameters),
+					parameters: { ...ocConf.globalParameters, ...options.parameters },
 				},
 			],
 		};
@@ -265,14 +265,12 @@ export function createOc(oc) {
 		return new Promise((resolve, reject) => {
 			const name = options.component;
 			getData(
-				$.extend(
-					{
-						json: true,
-						name: name,
-					},
-					renderedComponents[name],
-					options,
-				),
+				{
+					json: true,
+					name: name,
+					...renderedComponents[name],
+					...options,
+				},
 
 				(err, data) => {
 					if (err) {
@@ -312,12 +310,12 @@ export function createOc(oc) {
 
 		if (options.parameters) {
 			href += "?";
-			$.each(options.parameters, (key, value) => {
+			for (let [key, value] of Object.entries(options.parameters)) {
 				if (/[+&=]/.test(value)) {
 					value = encodeURIComponent(value);
 				}
 				href += key + "=" + value + "&";
-			});
+			}
 
 			href = href.slice(0, -1);
 		}
@@ -489,14 +487,10 @@ export function createOc(oc) {
 				callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
 			} else {
 				fetch(
-					addParametersToHref(
-						href,
-						$.extend(
-							{},
-							ocConf.globalParameters,
-							RETRY_SEND_NUMBER && { __oc_Retry: retryNumber },
-						),
-					),
+					addParametersToHref(href, {
+						...ocConf.globalParameters,
+						...(RETRY_SEND_NUMBER ? { __oc_Retry: retryNumber } : {}),
+					}),
 					{
 						headers: getHeaders(),
 					},
