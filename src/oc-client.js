@@ -1,5 +1,4 @@
 /* globals __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
-/* eslint prefer-arrow-callback: 'off' */
 
 export function createOc(oc) {
 	// If oc client is already inside the page, we do nothing.
