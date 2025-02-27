@@ -29,9 +29,9 @@
 		"prepare": "husky install"
 	},
 	"lint-staged": {
-		"src/**/*.js": ["prettier --write"],
-		"tasks/*.js": ["prettier --write"],
-		"test/*.js": ["prettier --write"]
+		"src/**/*.js": ["npm run lint"],
+		"tasks/*.js": ["npm run lint"],
+		"test/*.js": ["npm run lint"]
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
