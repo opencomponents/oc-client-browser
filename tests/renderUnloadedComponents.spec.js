@@ -47,7 +47,7 @@ test.describe("oc-client : renderUnloadedComponents", () => {
 			};
 
 			// Store original functions to restore later
-			window.originalAjax = oc.$.ajax;
+			window.originalFetch = window.fetch;
 			window.originalConsoleLog = console.log;
 			window.originalLjsLoad = ljs.load;
 		});
@@ -57,7 +57,7 @@ test.describe("oc-client : renderUnloadedComponents", () => {
 		// Clean up after each test
 		await page.evaluate(() => {
 			// Restore original functions
-			oc.$.ajax = window.originalAjax;
+			window.fetch = window.originalFetch;
 			console.log = window.originalConsoleLog;
 			ljs.load = window.originalLjsLoad;
 
@@ -72,7 +72,7 @@ test.describe("oc-client : renderUnloadedComponents", () => {
 			// Clean up test variables
 			delete window.aComponent;
 			delete window.anotherComponent;
-			delete window.originalAjax;
+			delete window.originalFetch;
 			delete window.originalConsoleLog;
 			delete window.originalLjsLoad;
 			delete window.eventData;
@@ -84,13 +84,25 @@ test.describe("oc-client : renderUnloadedComponents", () => {
 	}) => {
 		const result = await page.evaluate(() => {
 			return new Promise((resolve) => {
-				// Mock ajax
-				oc.$.ajax = (p) => {
-					const isAnother = p.url.indexOf("another") > 0;
-					console.log("GET", p.url);
-					p.success(
-						(isAnother ? window.anotherComponent : window.aComponent).response,
-					);
+				// Mock fetch
+				window.fetch = (url, options) => {
+					const isAnother = url.indexOf("another") > 0;
+					console.log("GET", url);
+
+					// Create a response object that mimics fetch Response
+					const mockResponse = {
+						ok: true,
+						headers: {
+							get: () => null,
+						},
+						json: () =>
+							Promise.resolve(
+								(isAnother ? window.anotherComponent : window.aComponent)
+									.response,
+							),
+					};
+
+					return Promise.resolve(mockResponse);
 				};
 
 				// Mock ljs.load

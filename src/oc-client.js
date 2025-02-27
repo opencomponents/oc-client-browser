@@ -32,7 +32,14 @@ export function createOc(oc) {
 		dataRenderedAttribute = "data-rendered",
 		dataRenderingAttribute = "data-rendering",
 		logError = (msg) => console.log(msg),
-		logInfo = (msg) => ocConf.debug && console.log(msg);
+		logInfo = (msg) => ocConf.debug && console.log(msg),
+		handleFetchResponse = (response) => {
+			if (!response.ok) throw response;
+			if (response.headers.get("Content-Type") !== "x-text/stream")
+				return response.json();
+
+			return oc._decode(response.body).then((decoded) => decoded.value);
+		};
 
 	// constants
 	const RETRY_INTERVAL =
@@ -210,10 +217,10 @@ export function createOc(oc) {
 
 	const getData = (options, cb) => {
 		cb = cb || noop;
-		const version = options.version;
-		const baseUrl = options.baseUrl;
-		const name = options.name;
-		const json = options.json;
+		const version = options.version,
+			baseUrl = options.baseUrl,
+			name = options.name,
+			json = options.json;
 		isRequired("version", version);
 		isRequired("baseUrl", baseUrl);
 		isRequired("name", name);
@@ -229,24 +236,29 @@ export function createOc(oc) {
 			],
 		};
 		const headers = getHeaders();
-		const ajaxOptions = {
-			method: "POST",
-			url: baseUrl,
-			data: jsonRequest ? JSON.stringify(data) : data,
-			headers: headers,
-			crossDomain: true,
-			success: (apiResponse) => {
-				const response = apiResponse[0].response;
-				const err = response.error ? response.details || response.error : null;
-				cb(err, response.data, apiResponse[0]);
-			},
-			error: cb,
-		};
+
 		if (jsonRequest) {
 			headers["Content-Type"] = "application/json";
 		}
 
-		$.ajax(ajaxOptions);
+		fetch(baseUrl, {
+			method: "POST",
+			headers: headers,
+			body: jsonRequest ? JSON.stringify(data) : $.param(data),
+		})
+			.then(handleFetchResponse)
+			.then((apiResponse) => {
+				if (!options.action) {
+					const response = apiResponse[0].response;
+					const err = response.error
+						? response.details || response.error
+						: null;
+					cb(err, response.data, apiResponse[0]);
+				} else {
+					cb(null, apiResponse.data);
+				}
+			})
+			.catch(cb);
 	};
 	oc.getData = getData;
 	oc.getAction = (options) => {
@@ -474,15 +486,17 @@ export function createOc(oc) {
 			if (!href) {
 				callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
 			} else {
-				$.ajax({
-					url: addParametersToHref(href, {
+				fetch(
+					addParametersToHref(href, {
 						...ocConf.globalParameters,
 						...(RETRY_SEND_NUMBER ? { __oc_Retry: retryNumber } : {}),
 					}),
-					headers: getHeaders(),
-					contentType: "text/plain",
-					crossDomain: true,
-					success: (apiResponse) => {
+					{
+						headers: getHeaders(),
+					},
+				)
+					.then(handleFetchResponse)
+					.then((apiResponse) => {
 						const template = apiResponse.template;
 						apiResponse.data.id = ocId;
 						apiResponse.data.element = element;
@@ -505,8 +519,8 @@ export function createOc(oc) {
 								});
 							}
 						});
-					},
-					error: (err) => {
+					})
+					.catch((err) => {
 						if (err && err.status == 429) {
 							retries[href] = 0;
 						}
@@ -528,8 +542,7 @@ export function createOc(oc) {
 								callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
 							},
 						);
-					},
-				});
+					});
 			}
 		});
 	};
