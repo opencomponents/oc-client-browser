@@ -106,6 +106,17 @@ export function createOc(oc) {
 		return href + (~href.indexOf("?") ? "&" : "?") + $.param(parameters);
 	};
 
+	const reanimateScripts = (component) => {
+		for (const script of Array.from(component.querySelectorAll("script"))) {
+			const newScript = document.createElement("script");
+			newScript.textContent = script.textContent;
+			for (const attribute of Array.from(script.attributes)) {
+				newScript.setAttribute(attribute.name, attribute.value);
+			}
+			script.parentNode?.replaceChild(newScript, script);
+		}
+	};
+
 	const getHeaders = () => {
 		const globalHeaders = ocConf.globalHeaders;
 		return {
@@ -198,6 +209,9 @@ export function createOc(oc) {
 		setAttribute("data-version", dataVersion);
 		setAttribute("data-id", data.ocId);
 		component.innerHTML = data.html;
+		// If the html contains <scripts> tags, innerHTML will not execute them.
+		// So we need to do it manually.
+		reanimateScripts(component);
 
 		if (data.key) {
 			setAttribute("data-hash", data.key);
