@@ -33,7 +33,14 @@ export function createOc(oc) {
     dataRenderedAttribute = 'data-rendered',
     dataRenderingAttribute = 'data-rendering',
     logError = msg => console.log(msg),
-    logInfo = msg => ocConf.debug && console.log(msg);
+    logInfo = msg => ocConf.debug && console.log(msg),
+    handleFetchResponse = response => {
+      if (!response.ok) throw response;
+      if (response.headers.get('Content-Type') !== 'x-text/stream')
+        return response.json();
+
+      return oc._decode(response.body).then(decoded => decoded.value);
+    };
 
   // constants
   let RETRY_INTERVAL =
@@ -230,24 +237,27 @@ export function createOc(oc) {
       ]
     };
     let headers = getHeaders();
-    let ajaxOptions = {
-      method: 'POST',
-      url: baseUrl,
-      data: jsonRequest ? JSON.stringify(data) : data,
-      headers: headers,
-      crossDomain: true,
-      success: apiResponse => {
-        let response = apiResponse[0].response;
-        let err = response.error ? response.details || response.error : null;
-        cb(err, response.data, apiResponse[0]);
-      },
-      error: cb
-    };
+
     if (jsonRequest) {
       headers['Content-Type'] = 'application/json';
     }
 
-    $.ajax(ajaxOptions);
+    fetch(baseUrl, {
+      method: 'POST',
+      headers: headers,
+      body: jsonRequest ? JSON.stringify(data) : $.param(data)
+    })
+      .then(handleFetchResponse)
+      .then(apiResponse => {
+        if (!options.action) {
+          let response = apiResponse[0].response;
+          let err = response.error ? response.details || response.error : null;
+          cb(err, response.data, apiResponse[0]);
+        } else {
+          cb(null, apiResponse.data);
+        }
+      })
+      .catch(cb);
   };
   oc.getData = getData;
   oc.getAction = options => {
@@ -476,8 +486,8 @@ export function createOc(oc) {
       if (!href) {
         callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
       } else {
-        $.ajax({
-          url: addParametersToHref(
+        fetch(
+          addParametersToHref(
             href,
             $.extend(
               {},
@@ -485,11 +495,13 @@ export function createOc(oc) {
               RETRY_SEND_NUMBER && { __oc_Retry: retryNumber }
             )
           ),
-          headers: getHeaders(),
-          contentType: 'text/plain',
-          crossDomain: true,
-          success: apiResponse => {
-            let template = apiResponse.template;
+          {
+            headers: getHeaders()
+          }
+        )
+          .then(handleFetchResponse)
+          .then(apiResponse => {
+            var template = apiResponse.template;
             apiResponse.data.id = ocId;
             apiResponse.data.element = element;
             oc.render(template, apiResponse.data, (err, html) => {
@@ -510,8 +522,8 @@ export function createOc(oc) {
                 });
               }
             });
-          },
-          error: err => {
+          })
+          .catch(err => {
             if (err && err.status == 429) {
               retries[href] = 0;
             }
@@ -533,8 +545,7 @@ export function createOc(oc) {
                 callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
               }
             );
-          }
-        });
+          });
       }
     });
   };

@@ -58,23 +58,37 @@ test.describe('oc-client : getData', () => {
     expect(result.message).toEqual('version parameter is required');
   });
 
-  test('should make AJAX request with correct parameters', async ({ page }) => {
-    const ajaxMockResult = await page.evaluate(() => {
-      // Save original ajax
-      const originalAjax = oc.$.ajax;
+  test('should make fetch request with correct parameters', async ({
+    page
+  }) => {
+    const fetchMockResult = await page.evaluate(() => {
+      // Save original fetch
+      const originalFetch = window.fetch;
 
       // Create a mock that captures the request
       let requestData = null;
-      oc.$.ajax = function (options) {
+
+      window.fetch = function (url, options) {
         requestData = {
           method: options.method,
-          url: options.url,
-          data: options.data,
+          url: url,
+          body: options.body,
           headers: options.headers
         };
-        return options.success([
-          { response: { renderMode: 'unrendered', data: 'hello' } }
-        ]);
+
+        // Create a response object that mimics fetch Response
+        const mockResponse = {
+          ok: true,
+          headers: {
+            get: name => (name === 'Content-Type' ? null : null)
+          },
+          json: () =>
+            Promise.resolve([
+              { response: { renderMode: 'unrendered', data: 'hello' } }
+            ])
+        };
+
+        return Promise.resolve(mockResponse);
       };
 
       // Execute the function
@@ -89,8 +103,8 @@ test.describe('oc-client : getData', () => {
             }
           },
           function (err, data) {
-            // Restore original ajax
-            oc.$.ajax = originalAjax;
+            // Restore original fetch
+            window.fetch = originalFetch;
 
             // Resolve with captured data and results
             resolve({
@@ -103,41 +117,61 @@ test.describe('oc-client : getData', () => {
       });
     });
 
-    // Verify the ajax request
-    expect(ajaxMockResult.requestData.method).toEqual('POST');
-    expect(ajaxMockResult.requestData.url).toEqual(
+    // Verify the fetch request
+    expect(fetchMockResult.requestData.method).toEqual('POST');
+    expect(fetchMockResult.requestData.url).toEqual(
       'http://www.components.com/v2'
     );
-    expect(ajaxMockResult.requestData.data.components[0].name).toEqual(
-      'myComponent'
-    );
-    expect(ajaxMockResult.requestData.data.components[0].version).toEqual(
-      '6.6.6'
-    );
-    expect(
-      ajaxMockResult.requestData.data.components[0].parameters.name
-    ).toEqual('evil');
-    expect(ajaxMockResult.requestData.headers.Accept).toEqual(
+
+    // Parse body data (assuming it's URL-encoded or JSON)
+    const bodyData = fetchMockResult.requestData.body.includes('{')
+      ? JSON.parse(fetchMockResult.requestData.body)
+      : new URLSearchParams(fetchMockResult.requestData.body);
+
+    if (bodyData instanceof URLSearchParams) {
+      // Handle URL-encoded body
+      const componentsParam = JSON.parse(bodyData.get('components'));
+      expect(componentsParam[0].name).toEqual('myComponent');
+      expect(componentsParam[0].version).toEqual('6.6.6');
+      expect(componentsParam[0].parameters.name).toEqual('evil');
+    } else {
+      // Handle JSON body
+      expect(bodyData.components[0].name).toEqual('myComponent');
+      expect(bodyData.components[0].version).toEqual('6.6.6');
+      expect(bodyData.components[0].parameters.name).toEqual('evil');
+    }
+
+    expect(fetchMockResult.requestData.headers.Accept).toEqual(
       'application/vnd.oc.unrendered+json'
     );
 
     // Verify callback data
-    expect(ajaxMockResult.callbackError).toEqual(null);
-    expect(ajaxMockResult.callbackData).toEqual('hello');
+    expect(fetchMockResult.callbackError).toEqual(null);
+    expect(fetchMockResult.callbackData).toEqual('hello');
   });
 
   test('should call the callback with server.js error details if available', async ({
     page
   }) => {
     const errorResult = await page.evaluate(() => {
-      // Save original ajax
-      const originalAjax = oc.$.ajax;
+      // Save original fetch
+      const originalFetch = window.fetch;
 
       // Create a mock that returns an error response
-      oc.$.ajax = function (options) {
-        return options.success([
-          { response: { error: 'oups', details: 'details about oups' } }
-        ]);
+      window.fetch = function () {
+        // Create a response object with error details
+        const mockResponse = {
+          ok: true,
+          headers: {
+            get: () => null
+          },
+          json: () =>
+            Promise.resolve([
+              { response: { error: 'oups', details: 'details about oups' } }
+            ])
+        };
+
+        return Promise.resolve(mockResponse);
       };
 
       // Execute the function
@@ -152,8 +186,8 @@ test.describe('oc-client : getData', () => {
             }
           },
           function (err, data) {
-            // Restore original ajax
-            oc.$.ajax = originalAjax;
+            // Restore original fetch
+            window.fetch = originalFetch;
 
             // Resolve with the error
             resolve({
@@ -173,12 +207,21 @@ test.describe('oc-client : getData', () => {
     page
   }) => {
     const errorResult = await page.evaluate(() => {
-      // Save original ajax
-      const originalAjax = oc.$.ajax;
+      // Save original fetch
+      const originalFetch = window.fetch;
 
       // Create a mock that returns an error response without details
-      oc.$.ajax = function (options) {
-        return options.success([{ response: { error: 'oups' } }]);
+      window.fetch = function () {
+        // Create a response object with error but no details
+        const mockResponse = {
+          ok: true,
+          headers: {
+            get: () => null
+          },
+          json: () => Promise.resolve([{ response: { error: 'oups' } }])
+        };
+
+        return Promise.resolve(mockResponse);
       };
 
       // Execute the function
@@ -193,8 +236,8 @@ test.describe('oc-client : getData', () => {
             }
           },
           function (err, data) {
-            // Restore original ajax
-            oc.$.ajax = originalAjax;
+            // Restore original fetch
+            window.fetch = originalFetch;
 
             // Resolve with the error
             resolve({
@@ -212,19 +255,30 @@ test.describe('oc-client : getData', () => {
 
   test('should handle JSON requests correctly', async ({ page }) => {
     const jsonResult = await page.evaluate(() => {
-      // Save original ajax
-      const originalAjax = oc.$.ajax;
+      // Save original fetch
+      const originalFetch = window.fetch;
 
       // Create a mock that captures the request
       let requestData = null;
-      oc.$.ajax = function (options) {
+      window.fetch = function (url, options) {
         requestData = {
-          data: options.data,
+          body: options.body,
           headers: options.headers
         };
-        return options.success([
-          { response: { renderMode: 'unrendered', data: 'hello' } }
-        ]);
+
+        // Create a response object
+        const mockResponse = {
+          ok: true,
+          headers: {
+            get: () => null
+          },
+          json: () =>
+            Promise.resolve([
+              { response: { renderMode: 'unrendered', data: 'hello' } }
+            ])
+        };
+
+        return Promise.resolve(mockResponse);
       };
 
       // Execute the function
@@ -240,8 +294,8 @@ test.describe('oc-client : getData', () => {
             json: true
           },
           function () {
-            // Restore original ajax
-            oc.$.ajax = originalAjax;
+            // Restore original fetch
+            window.fetch = originalFetch;
 
             // Resolve with captured data
             resolve({
@@ -253,7 +307,7 @@ test.describe('oc-client : getData', () => {
     });
 
     // Verify JSON request
-    expect(jsonResult.requestData.data).toEqual(
+    expect(jsonResult.requestData.body).toEqual(
       '{"components":[{"name":"myComponent","version":"6.6.6","parameters":{"name":"evil"}}]}'
     );
     expect(jsonResult.requestData.headers['Content-Type']).toEqual(
@@ -263,8 +317,8 @@ test.describe('oc-client : getData', () => {
 
   test('should include globalParameters in the request', async ({ page }) => {
     const globalParamsResult = await page.evaluate(() => {
-      // Save original ajax and config
-      const originalAjax = oc.$.ajax;
+      // Save original fetch and config
+      const originalFetch = window.fetch;
       const originalConf = Object.assign({}, oc.conf);
 
       // Set global parameters
@@ -274,13 +328,34 @@ test.describe('oc-client : getData', () => {
 
       // Create a mock that captures the request
       let requestData = null;
-      oc.$.ajax = function (options) {
+      window.fetch = function (url, options) {
+        // Parse the body data (assuming it's URL-encoded or JSON)
+        let bodyData;
+        if (typeof options.body === 'string' && options.body.startsWith('{')) {
+          bodyData = JSON.parse(options.body);
+        } else {
+          // Create a simple parser for url-encoded data
+          const params = new URLSearchParams(options.body);
+          bodyData = { components: JSON.parse(params.get('components')) };
+        }
+
         requestData = {
-          data: options.data
+          data: bodyData
         };
-        return options.success([
-          { response: { renderMode: 'unrendered', data: 'hello' } }
-        ]);
+
+        // Create a response object
+        const mockResponse = {
+          ok: true,
+          headers: {
+            get: () => null
+          },
+          json: () =>
+            Promise.resolve([
+              { response: { renderMode: 'unrendered', data: 'hello' } }
+            ])
+        };
+
+        return Promise.resolve(mockResponse);
       };
 
       // Execute the function
@@ -295,8 +370,8 @@ test.describe('oc-client : getData', () => {
             }
           },
           function () {
-            // Restore original ajax and config
-            oc.$.ajax = originalAjax;
+            // Restore original fetch and config
+            window.fetch = originalFetch;
             oc.conf = originalConf;
 
             // Resolve with captured data
@@ -317,12 +392,10 @@ test.describe('oc-client : getData', () => {
     ).toEqual('value');
   });
 
-  test('should include global headers as data in the request', async ({
-    page
-  }) => {
+  test('should include global headers in the request', async ({ page }) => {
     const globalHeadersResult = await page.evaluate(() => {
-      // Save original ajax and config
-      const originalAjax = oc.$.ajax;
+      // Save original fetch and config
+      const originalFetch = window.fetch;
       const originalConf = Object.assign({}, oc.conf);
 
       // Set global headers
@@ -332,13 +405,24 @@ test.describe('oc-client : getData', () => {
 
       // Create a mock that captures the request
       let requestData = null;
-      oc.$.ajax = function (options) {
+      window.fetch = function (url, options) {
         requestData = {
           headers: options.headers
         };
-        return options.success([
-          { response: { renderMode: 'unrendered', data: 'hello' } }
-        ]);
+
+        // Create a response object
+        const mockResponse = {
+          ok: true,
+          headers: {
+            get: () => null
+          },
+          json: () =>
+            Promise.resolve([
+              { response: { renderMode: 'unrendered', data: 'hello' } }
+            ])
+        };
+
+        return Promise.resolve(mockResponse);
       };
 
       // Execute the function
@@ -353,8 +437,8 @@ test.describe('oc-client : getData', () => {
             }
           },
           function () {
-            // Restore original ajax and config
-            oc.$.ajax = originalAjax;
+            // Restore original fetch and config
+            window.fetch = originalFetch;
             oc.conf = originalConf;
 
             // Resolve with captured data
@@ -374,8 +458,8 @@ test.describe('oc-client : getData', () => {
 
   test('should support global headers as a function', async ({ page }) => {
     const globalHeadersFnResult = await page.evaluate(() => {
-      // Save original ajax and config
-      const originalAjax = oc.$.ajax;
+      // Save original fetch and config
+      const originalFetch = window.fetch;
       const originalConf = Object.assign({}, oc.conf);
 
       // Set global headers as a function
@@ -387,13 +471,24 @@ test.describe('oc-client : getData', () => {
 
       // Create a mock that captures the request
       let requestData = null;
-      oc.$.ajax = function (options) {
+      window.fetch = function (url, options) {
         requestData = {
           headers: options.headers
         };
-        return options.success([
-          { response: { renderMode: 'unrendered', data: 'hello' } }
-        ]);
+
+        // Create a response object
+        const mockResponse = {
+          ok: true,
+          headers: {
+            get: () => null
+          },
+          json: () =>
+            Promise.resolve([
+              { response: { renderMode: 'unrendered', data: 'hello' } }
+            ])
+        };
+
+        return Promise.resolve(mockResponse);
       };
 
       // Execute the function
@@ -408,8 +503,8 @@ test.describe('oc-client : getData', () => {
             }
           },
           function () {
-            // Restore original ajax and config
-            oc.$.ajax = originalAjax;
+            // Restore original fetch and config
+            window.fetch = originalFetch;
             oc.conf = originalConf;
 
             // Resolve with captured data
@@ -425,5 +520,40 @@ test.describe('oc-client : getData', () => {
     expect(globalHeadersFnResult.requestData.headers.testHeader).toEqual(
       'headerValue'
     );
+  });
+
+  test('should handle fetch errors correctly', async ({ page }) => {
+    const errorResult = await page.evaluate(() => {
+      // Save original fetch
+      const originalFetch = window.fetch;
+
+      // Create a mock that returns a failed response
+      window.fetch = function () {
+        return Promise.reject(new Error('Network error'));
+      };
+
+      // Execute the function
+      return new Promise(resolve => {
+        oc.getData(
+          {
+            baseUrl: 'http://www.components.com/v2',
+            name: 'myComponent',
+            version: '6.6.6'
+          },
+          function (err) {
+            // Restore original fetch
+            window.fetch = originalFetch;
+
+            // Resolve with the error
+            resolve({
+              callbackError: err instanceof Error ? err.message : err
+            });
+          }
+        );
+      });
+    });
+
+    // Verify error was passed to callback
+    expect(errorResult.callbackError).toEqual('Network error');
   });
 });
