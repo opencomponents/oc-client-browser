@@ -1,5 +1,5 @@
 /* globals __CLIENT_VERSION__, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
-import { decode } from "turbo-stream";
+import { decode } from "@rdevis/turbo-stream";
 
 export function createOc(oc) {
 	// If oc client is already inside the page, we do nothing.
