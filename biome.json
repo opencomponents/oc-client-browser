@@ -24,6 +24,7 @@
 				"noDelete": "off"
 			},
 			"style": {
+				"useConst": "off",
 				"useTemplate": "off",
 				"noParameterAssign": "off",
 				"useSingleVarDeclarator": "off"

@@ -11,67 +11,67 @@ export function createOc(oc) {
 	oc.cmd = oc.cmd || [];
 	oc.renderedComponents = oc.renderedComponents || {};
 
-	const isRequired = (name, value) => {
+	let isRequired = (name, value) => {
 		if (!value) {
 			throw name + " parameter is required";
 		}
 	};
 
 	// The code
-	let $document = document,
-		$window = window,
-		noop = () => {},
-		initialised = false,
-		initialising = false,
-		retries = {},
-		isBool = (a) => typeof a == "boolean",
-		timeout = setTimeout,
-		ocCmd = oc.cmd,
-		ocConf = oc.conf,
-		renderedComponents = oc.renderedComponents,
-		dataRenderedAttribute = "data-rendered",
-		dataRenderingAttribute = "data-rendering",
-		logError = (msg) => console.log(msg),
-		logInfo = (msg) => ocConf.debug && console.log(msg),
-		handleFetchResponse = (response) => {
-			if (!response.ok) throw response;
-			if (response.headers.get("Content-Type") !== "x-text/stream")
-				return response.json();
+	let $document = document;
+	let $window = window;
+	let noop = () => {};
+	let initialised = false;
+	let initialising = false;
+	let retries = {};
+	let isBool = (a) => typeof a == "boolean";
+	let timeout = setTimeout;
+	let ocCmd = oc.cmd;
+	let ocConf = oc.conf;
+	let renderedComponents = oc.renderedComponents;
+	let dataRenderedAttribute = "data-rendered";
+	let dataRenderingAttribute = "data-rendering";
+	let logError = (msg) => console.log(msg);
+	let logInfo = (msg) => ocConf.debug && console.log(msg);
+	let handleFetchResponse = (response) => {
+		if (!response.ok) throw response;
+		if (response.headers.get("Content-Type") !== "x-text/stream")
+			return response.json();
 
-			return decode(response.body).then((decoded) => decoded.value);
-		};
+		return decode(response.body).then((decoded) => decoded.value);
+	};
 
-	// constants
-	const RETRY_INTERVAL =
-			ocConf.retryInterval || Number(__DEFAULT_RETRY_INTERVAL__),
-		RETRY_LIMIT = ocConf.retryLimit || Number(__DEFAULT_RETRY_LIMIT__),
-		DISABLE_LOADER = isBool(ocConf.disableLoader)
-			? ocConf.disableLoader
-			: __DEFAULT_DISABLE_LOADER__,
-		RETRY_SEND_NUMBER = ocConf.retrySendNumber || true,
-		POLLING_INTERVAL = ocConf.pollingInterval || 500,
-		OC_TAG = ocConf.tag || "oc-component",
-		MESSAGES_ERRORS_HREF_MISSING = "Href parameter missing",
-		MESSAGES_ERRORS_RETRY_FAILED =
-			"Failed to load % component " + RETRY_LIMIT + " times. Giving up",
-		MESSAGES_ERRORS_LOADING_COMPILED_VIEW = "Error getting compiled view: %",
-		MESSAGES_ERRORS_RENDERING = "Error rendering component: %, error: ",
-		MESSAGES_ERRORS_RETRIEVING =
-			"Failed to retrieve the component. Retrying in " +
-			RETRY_INTERVAL / 1000 +
-			" seconds...",
-		MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED =
-			'Error loading component: view engine "%" not supported',
-		MESSAGES_LOADING_COMPONENT = ocConf.loadingMessage || "",
-		MESSAGES_RENDERED = "Component '%' correctly rendered",
-		MESSAGES_RETRIEVING =
-			"Unrendered component found. Trying to retrieve it...",
-		interpolate = (str, value) => str.replace("%", value);
+	// Constants
+	let RETRY_INTERVAL =
+		ocConf.retryInterval || Number(__DEFAULT_RETRY_INTERVAL__);
+	let RETRY_LIMIT = ocConf.retryLimit || Number(__DEFAULT_RETRY_LIMIT__);
+	let DISABLE_LOADER = isBool(ocConf.disableLoader)
+		? ocConf.disableLoader
+		: __DEFAULT_DISABLE_LOADER__;
+	let RETRY_SEND_NUMBER = ocConf.retrySendNumber || true;
+	let POLLING_INTERVAL = ocConf.pollingInterval || 500;
+	let OC_TAG = ocConf.tag || "oc-component";
+	let MESSAGES_ERRORS_HREF_MISSING = "Href parameter missing";
+	let MESSAGES_ERRORS_RETRY_FAILED =
+		"Failed to load % component " + RETRY_LIMIT + " times. Giving up";
+	let MESSAGES_ERRORS_LOADING_COMPILED_VIEW = "Error getting compiled view: %";
+	let MESSAGES_ERRORS_RENDERING = "Error rendering component: %, error: ";
+	let MESSAGES_ERRORS_RETRIEVING =
+		"Failed to retrieve the component. Retrying in " +
+		RETRY_INTERVAL / 1000 +
+		" seconds...";
+	let MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED =
+		'Error loading component: view engine "%" not supported';
+	let MESSAGES_LOADING_COMPONENT = ocConf.loadingMessage || "";
+	let MESSAGES_RENDERED = "Component '%' correctly rendered";
+	let MESSAGES_RETRIEVING =
+		"Unrendered component found. Trying to retrieve it...";
+	let interpolate = (str, value) => str.replace("%", value);
 
-	const registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__;
-	const externals = __EXTERNALS__;
+	let registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__;
+	let externals = __EXTERNALS__;
 
-	const registerTemplates = (templates, overwrite) => {
+	let registerTemplates = (templates, overwrite) => {
 		templates = Array.isArray(templates) ? templates : [templates];
 		templates.map((template) => {
 			if (overwrite || !registeredTemplates[template.type]) {
@@ -86,7 +86,7 @@ export function createOc(oc) {
 		registerTemplates(ocConf.templates, true);
 	}
 
-	const retry = (component, cb, failedRetryCb) => {
+	let retry = (component, cb, failedRetryCb) => {
 		if (retries[component] == undefined) {
 			retries[component] = RETRY_LIMIT;
 		}
@@ -101,25 +101,25 @@ export function createOc(oc) {
 		}
 	};
 
-	const addParametersToHref = (href, parameters) => {
+	let addParametersToHref = (href, parameters) => {
 		return (
 			href + (~href.indexOf("?") ? "&" : "?") + new URLSearchParams(parameters)
 		);
 	};
 
-	const reanimateScripts = (component) => {
-		for (const script of Array.from(component.querySelectorAll("script"))) {
-			const newScript = $document.createElement("script");
+	let reanimateScripts = (component) => {
+		for (let script of Array.from(component.querySelectorAll("script"))) {
+			let newScript = $document.createElement("script");
 			newScript.textContent = script.textContent;
-			for (const attribute of Array.from(script.attributes)) {
+			for (let attribute of Array.from(script.attributes)) {
 				newScript.setAttribute(attribute.name, attribute.value);
 			}
 			script.parentNode?.replaceChild(newScript, script);
 		}
 	};
 
-	const getHeaders = () => {
-		const globalHeaders = ocConf.globalHeaders;
+	let getHeaders = () => {
+		let globalHeaders = ocConf.globalHeaders;
 		return {
 			Accept: "application/vnd.oc.unrendered+json",
 			"Content-Type": "application/json",
@@ -128,12 +128,12 @@ export function createOc(oc) {
 	};
 
 	oc.addStylesToHead = (styles) => {
-		const style = $document.createElement("style");
+		let style = $document.createElement("style");
 		style.textContent = styles;
 		$document.head.appendChild(style);
 	};
 
-	const loadAfterReady = () => {
+	let loadAfterReady = () => {
 		oc.ready(oc.renderUnloadedComponents);
 	};
 
@@ -155,14 +155,14 @@ export function createOc(oc) {
 			nameSpace = [nameSpace];
 		}
 
-		const getObj = () => {
+		let getObj = () => {
 			let base = $window;
 
 			if (nameSpace == undefined) {
 				return undefined;
 			}
 
-			for (const i in nameSpace) {
+			for (let i in nameSpace) {
 				base = base[nameSpace[i]];
 				if (!base) {
 					return undefined;
@@ -172,7 +172,7 @@ export function createOc(oc) {
 			return base;
 		};
 
-		const cbGetObj = () => {
+		let cbGetObj = () => {
 			callback(getObj());
 		};
 
@@ -183,7 +183,7 @@ export function createOc(oc) {
 		}
 	};
 
-	const asyncRequireForEach = (toLoad, loaded, callback) => {
+	let asyncRequireForEach = (toLoad, loaded, callback) => {
 		if (!callback) {
 			callback = loaded;
 			loaded = [];
@@ -192,7 +192,7 @@ export function createOc(oc) {
 		if (!toLoad.length) {
 			callback(loaded);
 		} else {
-			const loading = toLoad[0];
+			let loading = toLoad[0];
 			oc.require(loading.global, loading.url, (resolved) => {
 				asyncRequireForEach(toLoad.slice(1), loaded.concat(resolved), callback);
 			});
@@ -201,10 +201,10 @@ export function createOc(oc) {
 
 	oc.requireSeries = asyncRequireForEach;
 
-	const processHtml = (component, data, callback) => {
-		const setAttribute = component.setAttribute.bind(component);
-		const dataName = data.name;
-		const dataVersion = data.version;
+	let processHtml = (component, data, callback) => {
+		let setAttribute = component.setAttribute.bind(component);
+		let dataName = data.name;
+		let dataVersion = data.version;
 		setAttribute("id", data.id);
 		setAttribute(dataRenderedAttribute, true);
 		setAttribute(dataRenderingAttribute, false);
@@ -232,16 +232,16 @@ export function createOc(oc) {
 		callback();
 	};
 
-	const getData = (options, cb) => {
+	let getData = (options, cb) => {
 		cb = cb || noop;
-		const version = options.version,
+		let version = options.version,
 			baseUrl = options.baseUrl,
 			name = options.name,
 			json = options.json;
 		isRequired("version", version);
 		isRequired("baseUrl", baseUrl);
 		isRequired("name", name);
-		const data = {
+		let data = {
 			components: [
 				{
 					action: options.action,
@@ -251,7 +251,7 @@ export function createOc(oc) {
 				},
 			],
 		};
-		const headers = getHeaders();
+		let headers = getHeaders();
 
 		fetch(baseUrl, {
 			method: "POST",
@@ -261,10 +261,8 @@ export function createOc(oc) {
 			.then(handleFetchResponse)
 			.then((apiResponse) => {
 				if (!options.action) {
-					const response = apiResponse[0].response;
-					const err = response.error
-						? response.details || response.error
-						: null;
+					let response = apiResponse[0].response;
+					let err = response.error ? response.details || response.error : null;
 					cb(err, response.data, apiResponse[0]);
 				} else {
 					cb(null, apiResponse.data);
@@ -275,7 +273,7 @@ export function createOc(oc) {
 	oc.getData = getData;
 	oc.getAction = (options) => {
 		return new Promise((resolve, reject) => {
-			const name = options.component;
+			let name = options.component;
 			getData(
 				{
 					json: true,
@@ -289,7 +287,7 @@ export function createOc(oc) {
 						reject(err);
 					} else {
 						if (data.component) {
-							const props = data.component.props;
+							let props = data.component.props;
 							delete props._staticPath;
 							delete props._baseUrl;
 							delete props._componentName;
@@ -309,7 +307,7 @@ export function createOc(oc) {
 		isRequired("baseUrl", options.baseUrl);
 		isRequired("name", options.name);
 
-		const withFinalSlash = (s) => {
+		let withFinalSlash = (s) => {
 			if (!s) return "";
 
 			return s.match(/\/$/) ? s : s + "/";
@@ -343,7 +341,7 @@ export function createOc(oc) {
 		} else {
 			initialising = true;
 
-			const done = () => {
+			let done = () => {
 				initialised = true;
 				initialising = false;
 
@@ -353,7 +351,7 @@ export function createOc(oc) {
 					return {
 						fire(key, data) {
 							if (listeners[key]) {
-								for (const cb of listeners[key]) {
+								for (let cb of listeners[key]) {
 									cb(data, data);
 								}
 							}
@@ -371,7 +369,7 @@ export function createOc(oc) {
 							if (typeof events === "string") {
 								events = [events];
 							}
-							for (const event of events) {
+							for (let event of events) {
 								if (listeners[event]) {
 									if (handler) {
 										listeners[event] = listeners[event].filter(
@@ -420,7 +418,7 @@ export function createOc(oc) {
 					type = "oc-template-" + type;
 				}
 			}
-			const template = registeredTemplates[type];
+			let template = registeredTemplates[type];
 
 			if (template) {
 				oc.require(
@@ -466,12 +464,12 @@ export function createOc(oc) {
 		oc.ready(() => {
 			// If the component is a jQuery object, we need to get the first element
 			component = component[0] || component;
-			const getAttribute = component.getAttribute.bind(component);
-			const setAttribute = component.setAttribute.bind(component);
-			const dataRendering = getAttribute(dataRenderingAttribute);
-			const dataRendered = getAttribute(dataRenderedAttribute);
-			const isRendering = dataRendering == "true";
-			const isRendered = dataRendered == "true";
+			let getAttribute = component.getAttribute.bind(component);
+			let setAttribute = component.setAttribute.bind(component);
+			let dataRendering = getAttribute(dataRenderingAttribute);
+			let dataRendered = getAttribute(dataRenderedAttribute);
+			let isRendering = dataRendering == "true";
+			let isRendered = dataRendered == "true";
 
 			if (!isRendering && !isRendered) {
 				logInfo(MESSAGES_RETRIEVING);
@@ -513,12 +511,11 @@ export function createOc(oc) {
 
 	oc.renderByHref = (hrefOrOptions, retryNumberOrCallback, callback) => {
 		callback = callback || retryNumberOrCallback;
-		const ocId = Math.floor(Math.random() * 9999999999);
-		const retryNumber =
-			hrefOrOptions.retryNumber || +retryNumberOrCallback || 0;
-		const href = hrefOrOptions.href || hrefOrOptions;
-		const id = hrefOrOptions.id || ocId;
-		const element = hrefOrOptions.element;
+		let ocId = Math.floor(Math.random() * 9999999999);
+		let retryNumber = hrefOrOptions.retryNumber || +retryNumberOrCallback || 0;
+		let href = hrefOrOptions.href || hrefOrOptions;
+		let id = hrefOrOptions.id || ocId;
+		let element = hrefOrOptions.element;
 
 		oc.ready(() => {
 			if (!href) {
@@ -535,7 +532,7 @@ export function createOc(oc) {
 				)
 					.then(handleFetchResponse)
 					.then((apiResponse) => {
-						const template = apiResponse.template;
+						let template = apiResponse.template;
 						apiResponse.data.id = ocId;
 						apiResponse.data.element = element;
 						oc.render(template, apiResponse.data, (err, html) => {
@@ -587,7 +584,7 @@ export function createOc(oc) {
 
 	oc.renderUnloadedComponents = () => {
 		oc.ready(() => {
-			const unloadedComponents = $document.querySelectorAll(
+			let unloadedComponents = $document.querySelectorAll(
 				`${OC_TAG}:not([data-rendered="true"]):not([data-failed="true"])`,
 			);
 
@@ -608,7 +605,7 @@ export function createOc(oc) {
 			if (placeholder) {
 				placeholder = placeholder[0] || placeholder;
 				placeholder.innerHTML = "<" + OC_TAG + ' href="' + href + '" />';
-				const newComponent = placeholder.querySelector(OC_TAG);
+				let newComponent = placeholder.querySelector(OC_TAG);
 				oc.renderNestedComponent(newComponent, () => {
 					callback(newComponent);
 				});
