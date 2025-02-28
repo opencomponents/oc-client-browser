@@ -1,4 +1,4 @@
-/* globals __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
+/* globals __CLIENT_VERSION__, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
 import { decode } from "turbo-stream";
 
 export function createOc(oc) {
@@ -10,6 +10,7 @@ export function createOc(oc) {
 	oc.conf = oc.conf || {};
 	oc.cmd = oc.cmd || [];
 	oc.renderedComponents = oc.renderedComponents || {};
+	oc.clientVersion = __CLIENT_VERSION__;
 
 	let isRequired = (name, value) => {
 		if (!value) {
@@ -236,21 +237,26 @@ export function createOc(oc) {
 		cb = cb || noop;
 		let version = options.version,
 			baseUrl = options.baseUrl,
-			name = options.name,
-			json = options.json;
+			name = options.name;
 		isRequired("version", version);
 		isRequired("baseUrl", baseUrl);
 		isRequired("name", name);
-		let data = {
-			components: [
-				{
-					action: options.action,
-					name: name,
-					version: version,
-					parameters: { ...ocConf.globalParameters, ...options.parameters },
-				},
-			],
-		};
+		if (options.action) {
+			baseUrl = `${baseUrl}~actions/${options.action}/${options.name}/${options.version || ""}`;
+		}
+		let parameters = { ...ocConf.globalParameters, ...options.parameters };
+		let data = options.action
+			? parameters
+			: {
+					components: [
+						{
+							action: options.action,
+							name: name,
+							version: version,
+							parameters,
+						},
+					],
+				};
 		let headers = getHeaders();
 
 		fetch(baseUrl, {

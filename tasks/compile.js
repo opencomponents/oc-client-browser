@@ -88,6 +88,7 @@ function getBuildOptions(conf = {}) {
 			__DISABLE_LEGACY_TEMPLATES__: JSON.stringify(
 				parsedConf.disableLegacyTemplates,
 			),
+			__CLIENT_VERSION__: JSON.stringify(packageJson.version),
 		},
 		bundle: true,
 		minify: false,
