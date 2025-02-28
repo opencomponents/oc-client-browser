@@ -1,608 +1,625 @@
-/* globals define, exports, require, globalThis, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
-/* eslint no-var: 'off' */
-/* eslint prefer-arrow-callback: 'off' */
-
-var oc = oc || {};
-
-(function (root, factory) {
-  'use strict';
-  if (typeof define == 'function' && define.amd) {
-    // AMD. Register as an anonymous module
-    define(['exports', 'jquery'], function (exports, $) {
-      $.extend(exports, root.oc);
-      factory((root.oc = exports), $, root.ljs, root.document, root.window);
-    });
-  } else if (
-    typeof exports == 'object' &&
-    typeof exports.nodeName != 'string'
-  ) {
-    // Common JS
-    factory(exports, require('jquery'), root.ljs, root.document, root.window);
-  } else {
-    // Browser globals
-    factory((root.oc = oc), root.$, root.ljs, root.document, root.window);
-  }
-})(this || globalThis, function (exports, _$, ljs, $document, $window) {
-  'use strict';
-  // jshint ignore:line
-  // public variables
-  oc.conf = oc.conf || {};
-  oc.cmd = oc.cmd || [];
-  oc.renderedComponents = oc.renderedComponents || {};
-
-  // If oc client is already inside the page, we do nothing.
-  if (oc.status) {
-    return oc;
-  }
-  oc.status = 'loading';
-
-  var isRequired = function (name, value) {
-    if (!value) {
-      throw name + ' parameter is required';
-    }
-  };
-
-  // The code
-  var $,
-    noop = function () {},
-    initialised = false,
-    initialising = false,
-    retries = {},
-    isBool = function (a) {
-      return typeof a == 'boolean';
-    },
-    timeout = setTimeout,
-    ocCmd = oc.cmd,
-    ocConf = oc.conf,
-    renderedComponents = oc.renderedComponents,
-    dataRenderedAttribute = 'data-rendered',
-    dataRenderingAttribute = 'data-rendering',
-    logError = function (msg) {
-      console.log(msg);
-    },
-    logInfo = function (msg) {
-      ocConf.debug && console.log(msg);
-    };
-
-  // constants
-  var RETRY_INTERVAL = ocConf.retryInterval || __DEFAULT_RETRY_INTERVAL__,
-    RETRY_LIMIT = ocConf.retryLimit || __DEFAULT_RETRY_LIMIT__,
-    DISABLE_LOADER = isBool(ocConf.disableLoader)
-      ? ocConf.disableLoader
-      : __DEFAULT_DISABLE_LOADER__,
-    RETRY_SEND_NUMBER = ocConf.retrySendNumber || true,
-    POLLING_INTERVAL = ocConf.pollingInterval || 500,
-    OC_TAG = ocConf.tag || 'oc-component',
-    JSON_REQUESTS = !!ocConf.jsonRequests,
-    MESSAGES_ERRORS_HREF_MISSING = 'Href parameter missing',
-    MESSAGES_ERRORS_RETRY_FAILED =
-      'Failed to load % component ' + RETRY_LIMIT + ' times. Giving up',
-    MESSAGES_ERRORS_LOADING_COMPILED_VIEW = 'Error getting compiled view: %',
-    MESSAGES_ERRORS_RENDERING = 'Error rendering component: %, error: ',
-    MESSAGES_ERRORS_RETRIEVING =
-      'Failed to retrieve the component. Retrying in ' +
-      RETRY_INTERVAL / 1000 +
-      ' seconds...',
-    MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED =
-      'Error loading component: view engine "%" not supported',
-    MESSAGES_LOADING_COMPONENT = ocConf.loadingMessage || '',
-    MESSAGES_RENDERED = "Component '%' correctly rendered",
-    MESSAGES_RETRIEVING =
-      'Unrendered component found. Trying to retrieve it...',
-    interpolate = function (str, value) {
-      return str.replace('%', value);
-    };
-
-  var registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__,
-    externals = __EXTERNALS__;
-
-  function registerTemplates(templates, overwrite) {
-    templates = Array.isArray(templates) ? templates : [templates];
-    templates.map(function (template) {
-      if (overwrite || !registeredTemplates[template.type]) {
-        registeredTemplates[template.type] = {
-          externals: template.externals
-        };
-      }
-    });
-  }
-
-  if (ocConf.templates) {
-    registerTemplates(ocConf.templates, true);
-  }
-
-  var retry = function (component, cb, failedRetryCb) {
-    if (retries[component] == undefined) {
-      retries[component] = RETRY_LIMIT;
-    }
-
-    if (retries[component] <= 0) {
-      failedRetryCb();
-    } else {
-      timeout(function () {
-        cb(RETRY_LIMIT - retries[component] + 1);
-      }, RETRY_INTERVAL);
-      retries[component]--;
-    }
-  };
-
-  var addParametersToHref = function (href, parameters) {
-    return href + (~href.indexOf('?') ? '&' : '?') + $.param(parameters);
-  };
-
-  var getHeaders = function () {
-    var globalHeaders = ocConf.globalHeaders;
-    return $.extend(
-      { Accept: 'application/vnd.oc.unrendered+json' },
-      typeof globalHeaders == 'function' ? globalHeaders() : globalHeaders
-    );
-  };
-
-  oc.addStylesToHead = function (styles) {
-    $('<style>' + styles + '</style>').appendTo($document.head);
-  };
-
-  function loadAfterReady() {
-    oc.ready(oc.renderUnloadedComponents);
-  }
-
-  oc.registerTemplates = function (templates) {
-    registerTemplates(templates);
-    loadAfterReady();
-    return registeredTemplates;
-  };
-
-  // A minimal require.js-ish that uses l.js
-  oc.require = function (nameSpace, url, callback) {
-    if (!callback) {
-      callback = url;
-      url = nameSpace;
-      nameSpace = undefined;
-    }
-
-    if (typeof nameSpace == 'string') {
-      nameSpace = [nameSpace];
-    }
-
-    var getObj = function () {
-      var base = $window;
-
-      if (nameSpace == undefined) {
-        return undefined;
-      }
-
-      for (var i in nameSpace) {
-        base = base[nameSpace[i]];
-        if (!base) {
-          return undefined;
-        }
-      }
-
-      return base;
-    };
-
-    var cbGetObj = function () {
-      callback(getObj());
-    };
-
-    if (!getObj()) {
-      ljs.load(url, cbGetObj);
-    } else {
-      cbGetObj();
-    }
-  };
-
-  var asyncRequireForEach = function (toLoad, loaded, callback) {
-    if (!callback) {
-      callback = loaded;
-      loaded = [];
-    }
-
-    if (!toLoad.length) {
-      callback(loaded);
-    } else {
-      var loading = toLoad[0];
-      oc.require(loading.global, loading.url, function (resolved) {
-        asyncRequireForEach(toLoad.slice(1), loaded.concat(resolved), callback);
-      });
-    }
-  };
-
-  oc.requireSeries = asyncRequireForEach;
-
-  var processHtml = function ($component, data, callback) {
-    var attr = $component.attr.bind($component),
-      dataName = data.name,
-      dataVersion = data.version;
-    attr('id', data.id);
-    attr(dataRenderedAttribute, true);
-    attr(dataRenderingAttribute, false);
-    attr('data-version', dataVersion);
-    attr('data-id', data.ocId);
-    $component.html(data.html);
-
-    if (data.key) {
-      attr('data-hash', data.key);
-    }
-
-    if (dataName) {
-      attr('data-name', dataName);
-      renderedComponents[dataName] = { version: dataVersion };
-      if (data.baseUrl) {
-        renderedComponents[dataName].baseUrl = data.baseUrl;
-      }
-      // Get raw element from jQuery object
-      data.element = $component[0];
-      oc.events.fire('oc:rendered', data);
-    }
-
-    callback();
-  };
-
-  function getData(options, cb) {
-    cb = cb || noop;
-    var version = options.version,
-      baseUrl = options.baseUrl,
-      name = options.name,
-      json = options.json;
-    isRequired('version', version);
-    isRequired('baseUrl', baseUrl);
-    isRequired('name', name);
-    var jsonRequest = isBool(json) ? json : JSON_REQUESTS;
-    var data = {
-      components: [
-        {
-          action: options.action,
-          name: name,
-          version: version,
-          parameters: $.extend({}, ocConf.globalParameters, options.parameters)
-        }
-      ]
-    };
-    var headers = getHeaders();
-    var ajaxOptions = {
-      method: 'POST',
-      url: baseUrl,
-      data: jsonRequest ? JSON.stringify(data) : data,
-      headers: headers,
-      crossDomain: true,
-      success: function (apiResponse) {
-        var response = apiResponse[0].response;
-        var err = response.error ? response.details || response.error : null;
-        cb(err, response.data, apiResponse[0]);
-      },
-      error: cb
-    };
-    if (jsonRequest) {
-      headers['Content-Type'] = 'application/json';
-    }
-
-    $.ajax(ajaxOptions);
-  }
-  oc.getData = getData;
-  oc.getAction = function (options) {
-    return new Promise(function (resolve, reject) {
-      var name = options.component;
-      getData(
-        $.extend(
-          {
-            json: true,
-            name: name
-          },
-          renderedComponents[name],
-          options
-        ),
-
-        function (err, data) {
-          if (err) {
-            reject(err);
-          } else {
-            if (data.component) {
-              var props = data.component.props;
-              delete props._staticPath;
-              delete props._baseUrl;
-              delete props._componentName;
-              delete props._componentVersion;
-
-              resolve(props);
-            } else {
-              resolve();
-            }
-          }
-        }
-      );
-    });
-  };
-
-  oc.build = function (options) {
-    isRequired('baseUrl', options.baseUrl);
-    isRequired('name', options.name);
-
-    var withFinalSlash = function (s) {
-      if (!s) return '';
-
-      return s.match(/\/$/) ? s : s + '/';
-    };
-
-    var href =
-      withFinalSlash(options.baseUrl) +
-      withFinalSlash(options.name) +
-      withFinalSlash(options.version);
-
-    if (options.parameters) {
-      href += '?';
-      $.each(options.parameters, function (key, value) {
-        if (/[+&=]/.test(value)) {
-          value = encodeURIComponent(value);
-        }
-        href += key + '=' + value + '&';
-      });
-
-      href = href.slice(0, -1);
-    }
-
-    return '<' + OC_TAG + ' href="' + href + '"></' + OC_TAG + '>';
-  };
-
-  oc.ready = function (callback) {
-    if (initialised) {
-      callback();
-    } else if (initialising) {
-      ocCmd.push(callback);
-    } else {
-      initialising = true;
-
-      var done = function () {
-        initialised = true;
-        initialising = false;
-
-        oc.events = (function () {
-          var obj = $({});
-
-          return {
-            fire: obj.trigger.bind(obj),
-            on: obj.on.bind(obj),
-            off: obj.off.bind(obj),
-            reset: function () {
-              obj.off();
-            }
-          };
-        })();
-
-        callback();
-
-        oc.events.fire('oc:ready', oc);
-        oc.status = 'ready';
-
-        ocCmd.map(function (cmd) {
-          cmd(oc);
-        });
-
-        oc.cmd = {
-          push: function (f) {
-            f(oc);
-          }
-        };
-      };
-
-      oc.requireSeries(externals, function (deps) {
-        var jQuery = deps[0];
-        if ($window.jQuery || $window.$) {
-          $ = oc.$ = jQuery;
-        } else {
-          $ = oc.$ = jQuery.noConflict();
-        }
-        done();
-      });
-    }
-  };
-
-  oc.render = function (compiledViewInfo, model, callback) {
-    oc.ready(function () {
-      // TODO: integrate with oc-empty-response-handler module
-      if (model && model.__oc_emptyResponse == true) {
-        return callback(null, '');
-      }
-
-      var type = compiledViewInfo.type;
-      if (!__DISABLE_LEGACY_TEMPLATES__) {
-        if (type == 'jade' || type == 'handlebars') {
-          type = 'oc-template-' + type;
-        }
-      }
-      var template = registeredTemplates[type];
-
-      if (template) {
-        oc.require(
-          ['oc', 'components', compiledViewInfo.key],
-          compiledViewInfo.src,
-          function (compiledView) {
-            if (!compiledView) {
-              callback(
-                interpolate(
-                  MESSAGES_ERRORS_LOADING_COMPILED_VIEW,
-                  compiledViewInfo.src
-                )
-              );
-            } else {
-              asyncRequireForEach(template.externals, function () {
-                try {
-                  callback(
-                    null,
-                    !__DISABLE_LEGACY_TEMPLATES__ &&
-                      type == 'oc-template-handlebars'
-                      ? $window.Handlebars.template(compiledView, [])(model)
-                      : compiledView(model)
-                  );
-                } catch (e) {
-                  callback('' + e);
-                }
-              });
-            }
-          }
-        );
-      } else {
-        callback(
-          interpolate(
-            MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED,
-            compiledViewInfo.type
-          )
-        );
-      }
-    });
-  };
-
-  oc.renderNestedComponent = function (component, callback) {
-    oc.ready(function () {
-      var $component = $(component),
-        attr = $component.attr.bind($component),
-        dataRendering = attr(dataRenderingAttribute),
-        dataRendered = attr(dataRenderedAttribute),
-        isRendering = dataRendering == 'true',
-        isRendered = dataRendered == 'true';
-
-      if (!isRendering && !isRendered) {
-        logInfo(MESSAGES_RETRIEVING);
-        attr(dataRenderingAttribute, true);
-        if (!DISABLE_LOADER) {
-          $component.html(
-            '<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + '</div>'
-          );
-        }
-
-        oc.renderByHref(
-          { href: attr('href'), id: attr('id'), element: $component[0] },
-          function (err, data) {
-            if (err || !data) {
-              attr(dataRenderingAttribute, false);
-              attr(dataRenderedAttribute, false);
-              attr('data-failed', true);
-              $component.html('');
-              oc.events.fire('oc:failed', {
-                originalError: err,
-                data: data,
-                component: $component[0]
-              });
-              logError(err);
-              callback();
-            } else {
-              processHtml($component, data, callback);
-            }
-          }
-        );
-      } else {
-        timeout(callback, POLLING_INTERVAL);
-      }
-    });
-  };
-
-  oc.renderByHref = function (hrefOrOptions, retryNumberOrCallback, callback) {
-    callback = callback || retryNumberOrCallback;
-    var ocId = Math.floor(Math.random() * 9999999999),
-      retryNumber = hrefOrOptions.retryNumber || +retryNumberOrCallback || 0,
-      href = hrefOrOptions.href || hrefOrOptions,
-      id = hrefOrOptions.id || ocId,
-      element = hrefOrOptions.element;
-
-    oc.ready(function () {
-      if (!href) {
-        callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
-      } else {
-        $.ajax({
-          url: addParametersToHref(
-            href,
-            $.extend(
-              {},
-              ocConf.globalParameters,
-              RETRY_SEND_NUMBER && { __oc_Retry: retryNumber }
-            )
-          ),
-          headers: getHeaders(),
-          contentType: 'text/plain',
-          crossDomain: true,
-          success: function (apiResponse) {
-            var template = apiResponse.template;
-            apiResponse.data.id = ocId;
-            apiResponse.data.element = element;
-            oc.render(template, apiResponse.data, function (err, html) {
-              if (err) {
-                callback(
-                  interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) + err
-                );
-              } else {
-                logInfo(interpolate(MESSAGES_RENDERED, template.src));
-                callback(null, {
-                  id: id,
-                  ocId: ocId,
-                  html: html,
-                  baseUrl: apiResponse.baseUrl,
-                  key: template.key,
-                  version: apiResponse.version,
-                  name: apiResponse.name
-                });
-              }
-            });
-          },
-          error: function (err) {
-            if (err && err.status == 429) {
-              retries[href] = 0;
-            }
-            logError(MESSAGES_ERRORS_RETRIEVING);
-            retry(
-              href,
-              function (requestNumber) {
-                oc.renderByHref(
-                  {
-                    href: href,
-                    retryNumber: requestNumber,
-                    id: id,
-                    element: element
-                  },
-                  callback
-                );
-              },
-              function () {
-                callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
-              }
-            );
-          }
-        });
-      }
-    });
-  };
-
-  oc.renderUnloadedComponents = function () {
-    oc.ready(function () {
-      var $unloadedComponents = $(
-        OC_TAG + '[data-rendered!=true][data-failed!=true]'
-      );
-
-      $unloadedComponents.map(function (idx, unloadedComponent) {
-        oc.renderNestedComponent(unloadedComponent, function () {
-          if (idx == $unloadedComponents.length - 1) {
-            oc.renderUnloadedComponents();
-          }
-        });
-      });
-    });
-  };
-
-  oc.load = function (placeholder, href, callback) {
-    oc.ready(function () {
-      callback = callback || noop;
-
-      if (placeholder) {
-        $(placeholder).html('<' + OC_TAG + ' href="' + href + '" />');
-        var newComponent = $(OC_TAG, placeholder);
-        oc.renderNestedComponent(newComponent, function () {
-          callback(newComponent);
-        });
-      }
-    });
-  };
-  // render the components
-  loadAfterReady();
-
-  // expose public variables and methods
-  exports = oc;
-});
+/* globals __CLIENT_VERSION__, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
+import { decode } from "@rdevis/turbo-stream";
+
+export function createOc(oc) {
+	// If oc client is already inside the page, we do nothing.
+	if (oc.status) {
+		return oc;
+	}
+	oc.status = "loading";
+	oc.conf = oc.conf || {};
+	oc.cmd = oc.cmd || [];
+	oc.renderedComponents = oc.renderedComponents || {};
+	oc.clientVersion = __CLIENT_VERSION__;
+
+	let isRequired = (name, value) => {
+		if (!value) {
+			throw name + " parameter is required";
+		}
+	};
+
+	// The code
+	let $document = document;
+	let $window = window;
+	let noop = () => {};
+	let initialised = false;
+	let initialising = false;
+	let retries = {};
+	let isBool = (a) => typeof a == "boolean";
+	let timeout = setTimeout;
+	let ocCmd = oc.cmd;
+	let ocConf = oc.conf;
+	let renderedComponents = oc.renderedComponents;
+	let dataRenderedAttribute = "data-rendered";
+	let dataRenderingAttribute = "data-rendering";
+	let logError = (msg) => console.log(msg);
+	let logInfo = (msg) => ocConf.debug && console.log(msg);
+	let handleFetchResponse = (response) => {
+		if (!response.ok) throw response;
+		if (response.headers.get("Content-Type") !== "x-text/stream")
+			return response.json();
+
+		return decode(response.body).then((decoded) => decoded.value);
+	};
+
+	// Constants
+	let RETRY_INTERVAL =
+		ocConf.retryInterval || Number(__DEFAULT_RETRY_INTERVAL__);
+	let RETRY_LIMIT = ocConf.retryLimit || Number(__DEFAULT_RETRY_LIMIT__);
+	let DISABLE_LOADER = isBool(ocConf.disableLoader)
+		? ocConf.disableLoader
+		: __DEFAULT_DISABLE_LOADER__;
+	let RETRY_SEND_NUMBER = ocConf.retrySendNumber || true;
+	let POLLING_INTERVAL = ocConf.pollingInterval || 500;
+	let OC_TAG = ocConf.tag || "oc-component";
+	let MESSAGES_ERRORS_HREF_MISSING = "Href parameter missing";
+	let MESSAGES_ERRORS_RETRY_FAILED =
+		"Failed to load % component " + RETRY_LIMIT + " times. Giving up";
+	let MESSAGES_ERRORS_LOADING_COMPILED_VIEW = "Error getting compiled view: %";
+	let MESSAGES_ERRORS_RENDERING = "Error rendering component: %, error: ";
+	let MESSAGES_ERRORS_RETRIEVING =
+		"Failed to retrieve the component. Retrying in " +
+		RETRY_INTERVAL / 1000 +
+		" seconds...";
+	let MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED =
+		'Error loading component: view engine "%" not supported';
+	let MESSAGES_LOADING_COMPONENT = ocConf.loadingMessage || "";
+	let MESSAGES_RENDERED = "Component '%' correctly rendered";
+	let MESSAGES_RETRIEVING =
+		"Unrendered component found. Trying to retrieve it...";
+	let interpolate = (str, value) => str.replace("%", value);
+
+	let registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__;
+	let externals = __EXTERNALS__;
+
+	let registerTemplates = (templates, overwrite) => {
+		templates = Array.isArray(templates) ? templates : [templates];
+		templates.map((template) => {
+			if (overwrite || !registeredTemplates[template.type]) {
+				registeredTemplates[template.type] = {
+					externals: template.externals,
+				};
+			}
+		});
+	};
+
+	if (ocConf.templates) {
+		registerTemplates(ocConf.templates, true);
+	}
+
+	let retry = (component, cb, failedRetryCb) => {
+		if (retries[component] == undefined) {
+			retries[component] = RETRY_LIMIT;
+		}
+
+		if (retries[component] <= 0) {
+			failedRetryCb();
+		} else {
+			timeout(() => {
+				cb(RETRY_LIMIT - retries[component] + 1);
+			}, RETRY_INTERVAL);
+			retries[component]--;
+		}
+	};
+
+	let addParametersToHref = (href, parameters) => {
+		return (
+			href + (~href.indexOf("?") ? "&" : "?") + new URLSearchParams(parameters)
+		);
+	};
+
+	let reanimateScripts = (component) => {
+		for (let script of Array.from(component.querySelectorAll("script"))) {
+			let newScript = $document.createElement("script");
+			newScript.textContent = script.textContent;
+			for (let attribute of Array.from(script.attributes)) {
+				newScript.setAttribute(attribute.name, attribute.value);
+			}
+			script.parentNode?.replaceChild(newScript, script);
+		}
+	};
+
+	let getHeaders = () => {
+		let globalHeaders = ocConf.globalHeaders;
+		return {
+			Accept: "application/vnd.oc.unrendered+json",
+			"Content-Type": "application/json",
+			...(typeof globalHeaders == "function" ? globalHeaders() : globalHeaders),
+		};
+	};
+
+	oc.addStylesToHead = (styles) => {
+		let style = $document.createElement("style");
+		style.textContent = styles;
+		$document.head.appendChild(style);
+	};
+
+	let loadAfterReady = () => {
+		oc.ready(oc.renderUnloadedComponents);
+	};
+
+	oc.registerTemplates = (templates) => {
+		registerTemplates(templates);
+		loadAfterReady();
+		return registeredTemplates;
+	};
+
+	// A minimal require.js-ish that uses l.js
+	oc.require = (nameSpace, url, callback) => {
+		if (!callback) {
+			callback = url;
+			url = nameSpace;
+			nameSpace = undefined;
+		}
+
+		if (typeof nameSpace == "string") {
+			nameSpace = [nameSpace];
+		}
+
+		let getObj = () => {
+			let base = $window;
+
+			if (nameSpace == undefined) {
+				return undefined;
+			}
+
+			for (let i in nameSpace) {
+				base = base[nameSpace[i]];
+				if (!base) {
+					return undefined;
+				}
+			}
+
+			return base;
+		};
+
+		let cbGetObj = () => {
+			callback(getObj());
+		};
+
+		if (!getObj()) {
+			ljs.load(url, cbGetObj);
+		} else {
+			cbGetObj();
+		}
+	};
+
+	let asyncRequireForEach = (toLoad, loaded, callback) => {
+		if (!callback) {
+			callback = loaded;
+			loaded = [];
+		}
+
+		if (!toLoad.length) {
+			callback(loaded);
+		} else {
+			let loading = toLoad[0];
+			oc.require(loading.global, loading.url, (resolved) => {
+				asyncRequireForEach(toLoad.slice(1), loaded.concat(resolved), callback);
+			});
+		}
+	};
+
+	oc.requireSeries = asyncRequireForEach;
+
+	let processHtml = (component, data, callback) => {
+		let setAttribute = component.setAttribute.bind(component);
+		let dataName = data.name;
+		let dataVersion = data.version;
+		setAttribute("id", data.id);
+		setAttribute(dataRenderedAttribute, true);
+		setAttribute(dataRenderingAttribute, false);
+		setAttribute("data-version", dataVersion);
+		setAttribute("data-id", data.ocId);
+		component.innerHTML = data.html;
+		// If the html contains <scripts> tags, innerHTML will not execute them.
+		// So we need to do it manually.
+		reanimateScripts(component);
+
+		if (data.key) {
+			setAttribute("data-hash", data.key);
+		}
+
+		if (dataName) {
+			setAttribute("data-name", dataName);
+			renderedComponents[dataName] = { version: dataVersion };
+			if (data.baseUrl) {
+				renderedComponents[dataName].baseUrl = data.baseUrl;
+			}
+			data.element = component;
+			oc.events.fire("oc:rendered", data);
+		}
+
+		callback();
+	};
+
+	let getData = (options, cb) => {
+		cb = cb || noop;
+		let version = options.version,
+			baseUrl = options.baseUrl,
+			name = options.name;
+		isRequired("version", version);
+		isRequired("baseUrl", baseUrl);
+		isRequired("name", name);
+		if (options.action) {
+			baseUrl = `${baseUrl}~actions/${options.action}/${options.name}/${options.version || ""}`;
+		}
+		let parameters = { ...ocConf.globalParameters, ...options.parameters };
+		let data = options.action
+			? parameters
+			: {
+					components: [
+						{
+							action: options.action,
+							name: name,
+							version: version,
+							parameters,
+						},
+					],
+				};
+		let headers = getHeaders();
+
+		fetch(baseUrl, {
+			method: "POST",
+			headers: headers,
+			body: JSON.stringify(data),
+		})
+			.then(handleFetchResponse)
+			.then((apiResponse) => {
+				if (!options.action) {
+					let response = apiResponse[0].response;
+					let err = response.error ? response.details || response.error : null;
+					cb(err, response.data, apiResponse[0]);
+				} else {
+					cb(null, apiResponse.data);
+				}
+			})
+			.catch(cb);
+	};
+	oc.getData = getData;
+	oc.getAction = (options) => {
+		return new Promise((resolve, reject) => {
+			let name = options.component;
+			getData(
+				{
+					json: true,
+					name: name,
+					...renderedComponents[name],
+					...options,
+				},
+
+				(err, data) => {
+					if (err) {
+						reject(err);
+					} else {
+						if (data.component) {
+							let props = data.component.props;
+							delete props._staticPath;
+							delete props._baseUrl;
+							delete props._componentName;
+							delete props._componentVersion;
+
+							resolve(props);
+						} else {
+							resolve();
+						}
+					}
+				},
+			);
+		});
+	};
+
+	oc.build = (options) => {
+		isRequired("baseUrl", options.baseUrl);
+		isRequired("name", options.name);
+
+		let withFinalSlash = (s) => {
+			if (!s) return "";
+
+			return s.match(/\/$/) ? s : s + "/";
+		};
+
+		let href =
+			withFinalSlash(options.baseUrl) +
+			withFinalSlash(options.name) +
+			withFinalSlash(options.version);
+
+		if (options.parameters) {
+			href += "?";
+			for (let [key, value] of Object.entries(options.parameters)) {
+				if (/[+&=]/.test(value)) {
+					value = encodeURIComponent(value);
+				}
+				href += key + "=" + value + "&";
+			}
+
+			href = href.slice(0, -1);
+		}
+
+		return "<" + OC_TAG + ' href="' + href + '"></' + OC_TAG + ">";
+	};
+
+	oc.ready = (callback) => {
+		if (initialised) {
+			callback();
+		} else if (initialising) {
+			ocCmd.push(callback);
+		} else {
+			initialising = true;
+
+			let done = () => {
+				initialised = true;
+				initialising = false;
+
+				oc.events = (() => {
+					let listeners = {};
+
+					return {
+						fire(key, data) {
+							if (listeners[key]) {
+								for (let cb of listeners[key]) {
+									cb(data, data);
+								}
+							}
+						},
+						on(key, cb) {
+							if (!cb) {
+								throw new Error("Callback is required");
+							}
+							if (!listeners[key]) {
+								listeners[key] = [];
+							}
+							listeners[key].push(cb);
+						},
+						off(events, handler) {
+							if (typeof events === "string") {
+								events = [events];
+							}
+							for (let event of events) {
+								if (listeners[event]) {
+									if (handler) {
+										listeners[event] = listeners[event].filter(
+											(cb) => cb !== handler,
+										);
+									} else {
+										delete listeners[event];
+									}
+								}
+							}
+						},
+						reset() {
+							listeners = {};
+						},
+					};
+				})();
+
+				callback();
+
+				oc.events.fire("oc:ready", oc);
+				oc.status = "ready";
+
+				ocCmd.map((cmd) => {
+					cmd(oc);
+				});
+
+				oc.cmd = {
+					push: (f) => f(oc),
+				};
+			};
+
+			oc.requireSeries(externals, done);
+		}
+	};
+
+	oc.render = (compiledViewInfo, model, callback) => {
+		oc.ready(() => {
+			// TODO: integrate with oc-empty-response-handler module
+			if (model && model.__oc_emptyResponse == true) {
+				return callback(null, "");
+			}
+
+			let type = compiledViewInfo.type;
+			if (!__DISABLE_LEGACY_TEMPLATES__) {
+				if (type == "jade" || type == "handlebars") {
+					type = "oc-template-" + type;
+				}
+			}
+			let template = registeredTemplates[type];
+
+			if (template) {
+				oc.require(
+					["oc", "components", compiledViewInfo.key],
+					compiledViewInfo.src,
+					(compiledView) => {
+						if (!compiledView) {
+							callback(
+								interpolate(
+									MESSAGES_ERRORS_LOADING_COMPILED_VIEW,
+									compiledViewInfo.src,
+								),
+							);
+						} else {
+							asyncRequireForEach(template.externals, () => {
+								try {
+									callback(
+										null,
+										!__DISABLE_LEGACY_TEMPLATES__ &&
+											type == "oc-template-handlebars"
+											? $window.Handlebars.template(compiledView, [])(model)
+											: compiledView(model),
+									);
+								} catch (e) {
+									callback("" + e);
+								}
+							});
+						}
+					},
+				);
+			} else {
+				callback(
+					interpolate(
+						MESSAGES_ERRORS_VIEW_ENGINE_NOT_SUPPORTED,
+						compiledViewInfo.type,
+					),
+				);
+			}
+		});
+	};
+
+	oc.renderNestedComponent = (component, callback) => {
+		oc.ready(() => {
+			// If the component is a jQuery object, we need to get the first element
+			component = component[0] || component;
+			let getAttribute = component.getAttribute.bind(component);
+			let setAttribute = component.setAttribute.bind(component);
+			let dataRendering = getAttribute(dataRenderingAttribute);
+			let dataRendered = getAttribute(dataRenderedAttribute);
+			let isRendering = dataRendering == "true";
+			let isRendered = dataRendered == "true";
+
+			if (!isRendering && !isRendered) {
+				logInfo(MESSAGES_RETRIEVING);
+				setAttribute(dataRenderingAttribute, true);
+				if (!DISABLE_LOADER) {
+					component.innerHTML =
+						'<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + "</div>";
+				}
+
+				oc.renderByHref(
+					{
+						href: getAttribute("href"),
+						id: getAttribute("id"),
+						element: component,
+					},
+					(err, data) => {
+						if (err || !data) {
+							setAttribute(dataRenderingAttribute, false);
+							setAttribute(dataRenderedAttribute, false);
+							setAttribute("data-failed", true);
+							component.innerHTML = "";
+							oc.events.fire("oc:failed", {
+								originalError: err,
+								data: data,
+								component,
+							});
+							logError(err);
+							callback();
+						} else {
+							processHtml(component, data, callback);
+						}
+					},
+				);
+			} else {
+				timeout(callback, POLLING_INTERVAL);
+			}
+		});
+	};
+
+	oc.renderByHref = (hrefOrOptions, retryNumberOrCallback, callback) => {
+		callback = callback || retryNumberOrCallback;
+		let ocId = Math.floor(Math.random() * 9999999999);
+		let retryNumber = hrefOrOptions.retryNumber || +retryNumberOrCallback || 0;
+		let href = hrefOrOptions.href || hrefOrOptions;
+		let id = hrefOrOptions.id || ocId;
+		let element = hrefOrOptions.element;
+
+		oc.ready(() => {
+			if (!href) {
+				callback(MESSAGES_ERRORS_RENDERING + MESSAGES_ERRORS_HREF_MISSING);
+			} else {
+				fetch(
+					addParametersToHref(href, {
+						...ocConf.globalParameters,
+						...(RETRY_SEND_NUMBER ? { __oc_Retry: retryNumber } : {}),
+					}),
+					{
+						headers: getHeaders(),
+					},
+				)
+					.then(handleFetchResponse)
+					.then((apiResponse) => {
+						let template = apiResponse.template;
+						apiResponse.data.id = ocId;
+						apiResponse.data.element = element;
+						oc.render(template, apiResponse.data, (err, html) => {
+							if (err) {
+								callback(
+									interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) +
+										err,
+								);
+							} else {
+								logInfo(interpolate(MESSAGES_RENDERED, template.src));
+								callback(null, {
+									id: id,
+									ocId: ocId,
+									html: html,
+									baseUrl: apiResponse.baseUrl,
+									key: template.key,
+									version: apiResponse.version,
+									name: apiResponse.name,
+								});
+							}
+						});
+					})
+					.catch((err) => {
+						if (err && err.status == 429) {
+							retries[href] = 0;
+						}
+						logError(MESSAGES_ERRORS_RETRIEVING);
+						retry(
+							href,
+							(requestNumber) => {
+								oc.renderByHref(
+									{
+										href: href,
+										retryNumber: requestNumber,
+										id: id,
+										element: element,
+									},
+									callback,
+								);
+							},
+							() => {
+								callback(interpolate(MESSAGES_ERRORS_RETRY_FAILED, href));
+							},
+						);
+					});
+			}
+		});
+	};
+
+	oc.renderUnloadedComponents = () => {
+		oc.ready(() => {
+			let unloadedComponents = $document.querySelectorAll(
+				`${OC_TAG}:not([data-rendered="true"]):not([data-failed="true"])`,
+			);
+
+			unloadedComponents.forEach((unloadedComponent, idx) => {
+				oc.renderNestedComponent(unloadedComponent, () => {
+					if (idx == unloadedComponents.length - 1) {
+						oc.renderUnloadedComponents();
+					}
+				});
+			});
+		});
+	};
+
+	oc.load = (placeholder, href, callback) => {
+		oc.ready(() => {
+			callback = callback || noop;
+
+			if (placeholder) {
+				placeholder = placeholder[0] || placeholder;
+				placeholder.innerHTML = "<" + OC_TAG + ' href="' + href + '" />';
+				let newComponent = placeholder.querySelector(OC_TAG);
+				oc.renderNestedComponent(newComponent, () => {
+					callback(newComponent);
+				});
+			}
+		});
+	};
+	// render the components
+	loadAfterReady();
+
+	return oc;
+}
