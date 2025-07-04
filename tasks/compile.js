@@ -56,7 +56,7 @@ function parseConf(conf) {
 
 	return {
 		externals: conf.externals || [],
-		imports: conf.importd || {},
+		imports: conf.imports || {},
 		retryLimit: conf.retryLimit || 30,
 		retryInterval: conf.retryInterval || 5000,
 		disableLegacyTemplates: disableLegacyTemplates,
