@@ -424,13 +424,13 @@ export function createOc(oc) {
 		}
 	};
 
-	const renderOc = (apiResponse, callback) => {
+	const renderOc = (template, apiResponse, callback) => {
 		const isEsm = !!apiResponse.data?.component?.esm;
 
 		if (isEsm) {
 			renderEsm(apiResponse.data, callback);
 		} else {
-			oc.render(apiResponse.data, callback);
+			oc.render(template, apiResponse.data, callback);
 		}
 	};
 
@@ -583,7 +583,7 @@ export function createOc(oc) {
 						apiResponse.data.id = ocId;
 						apiResponse.data.element = element;
 
-						renderOc(apiResponse, (err, html) => {
+						renderOc(template, apiResponse, (err, html) => {
 							if (err) {
 								callback(
 									interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) +
