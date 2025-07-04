@@ -22,6 +22,7 @@ type Template = {
 };
 interface CompileOptions {
 	templates?: Record<string, Template> | TemplateRenderer[];
+	imports?: Record<string, string>;
 	retryInterval?: number;
 	retryLimit?: number;
 	disableLoader?: boolean;
