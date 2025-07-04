@@ -1,4 +1,4 @@
-/* globals __CLIENT_VERSION__, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__ */
+/* globals __CLIENT_VERSION__, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__, __IMPORTS__ */
 import { decode } from "@rdevis/turbo-stream";
 
 export function createOc(oc) {
@@ -71,6 +71,7 @@ export function createOc(oc) {
 
 	let registeredTemplates = __REGISTERED_TEMPLATES_PLACEHOLDER__;
 	let externals = __EXTERNALS__;
+	let imports = __IMPORTS__;
 
 	let registerTemplates = (templates, overwrite) => {
 		templates = Array.isArray(templates) ? templates : [templates];
@@ -211,7 +212,9 @@ export function createOc(oc) {
 		setAttribute(dataRenderingAttribute, false);
 		setAttribute("data-version", dataVersion);
 		setAttribute("data-id", data.ocId);
-		component.innerHTML = data.html;
+		if (typeof data.html === "string") {
+			component.innerHTML = data.html;
+		}
 		// If the html contains <scripts> tags, innerHTML will not execute them.
 		// So we need to do it manually.
 		reanimateScripts(component);
@@ -242,7 +245,9 @@ export function createOc(oc) {
 		isRequired("baseUrl", baseUrl);
 		isRequired("name", name);
 		if (options.action) {
-			baseUrl = `${baseUrl}~actions/${options.action}/${options.name}/${options.version || ""}`;
+			baseUrl = `${baseUrl}~actions/${options.action}/${options.name}/${
+				options.version || ""
+			}`;
 		}
 		let parameters = { ...ocConf.globalParameters, ...options.parameters };
 		let data = options.action
@@ -392,6 +397,14 @@ export function createOc(oc) {
 						},
 					};
 				})();
+				if (Object.keys(imports).length > 0) {
+					$document.head.appendChild(
+						Object.assign($document.createElement("script"), {
+							type: "importmap",
+							textContent: JSON.stringify({ imports }),
+						}),
+					);
+				}
 
 				callback();
 
@@ -408,6 +421,34 @@ export function createOc(oc) {
 			};
 
 			oc.requireSeries(externals, done);
+		}
+	};
+
+	const renderOc = (template, apiResponse, callback) => {
+		const isEsm = !!apiResponse.data?.component?.esm;
+
+		if (isEsm) {
+			renderEsm(apiResponse.data, callback);
+		} else {
+			oc.render(template, apiResponse.data, callback);
+		}
+	};
+
+	const renderEsm = async (data, callback) => {
+		try {
+			const { _staticPath, _componentName, _componentVersion } =
+				data.component.props;
+			window.oc._esm = window.oc._esm || {};
+			window.oc._esm[`${_componentName}@${_componentVersion}`] = (args) => {
+				return _staticPath + "public/" + args;
+			};
+
+			const { mount } = await import(data.component.src);
+			mount(data.element, data.component.props);
+			callback(null);
+		} catch (error) {
+			console.error("Error rendering ESM component", error);
+			callback(error);
 		}
 	};
 
@@ -541,7 +582,8 @@ export function createOc(oc) {
 						let template = apiResponse.template;
 						apiResponse.data.id = ocId;
 						apiResponse.data.element = element;
-						oc.render(template, apiResponse.data, (err, html) => {
+
+						renderOc(template, apiResponse, (err, html) => {
 							if (err) {
 								callback(
 									interpolate(MESSAGES_ERRORS_RENDERING, apiResponse.href) +

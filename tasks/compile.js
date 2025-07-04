@@ -56,6 +56,7 @@ function parseConf(conf) {
 
 	return {
 		externals: conf.externals || [],
+		imports: conf.imports || {},
 		retryLimit: conf.retryLimit || 30,
 		retryInterval: conf.retryInterval || 5000,
 		disableLegacyTemplates: disableLegacyTemplates,
@@ -82,6 +83,7 @@ function getBuildOptions(conf = {}) {
 				parsedConf.templates,
 			),
 			__EXTERNALS__: JSON.stringify(parsedConf.externals),
+			__IMPORTS__: JSON.stringify(parsedConf.imports),
 			__DEFAULT_RETRY_LIMIT__: JSON.stringify(parsedConf.retryLimit),
 			__DEFAULT_RETRY_INTERVAL__: JSON.stringify(parsedConf.retryInterval),
 			__DEFAULT_DISABLE_LOADER__: JSON.stringify(parsedConf.disableLoader),
