@@ -363,7 +363,7 @@ export function createOc(oc) {
 						fire(key, data) {
 							if (listeners[key]) {
 								for (let cb of listeners[key]) {
-									cb(data, data);
+									cb({ type: key }, data);
 								}
 							}
 						},
