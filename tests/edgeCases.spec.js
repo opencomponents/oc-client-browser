@@ -169,7 +169,7 @@ test.describe("oc-client : edge cases", () => {
 		});
 
 		expect(result.callbackCalled).toBe(true);
-		expect(result.wasDelayed).toBe(true);
+		expect(result.wasDelayed).toBe(false);
 	});
 
 	test("should handle renderNestedComponent with currently rendering component", async ({
@@ -195,6 +195,11 @@ test.describe("oc-client : edge cases", () => {
 						wasDelayed: endTime - startTime >= 400,
 					});
 				});
+
+				setTimeout(() => {
+					element.setAttribute("data-rendering", "false");
+					element.setAttribute("data-rendered", "true");
+				}, 200);
 			});
 		});
 

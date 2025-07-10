@@ -177,4 +177,86 @@ test.describe("oc-client : renderNestedComponent", () => {
 		expect(failureResult.failedEvent).toBeDefined();
 		expect(failureResult.failedEvent.component).toBeDefined();
 	});
+
+	test("should not re-render a component that has already been rendered", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(
+			(config) => {
+				return new Promise((resolve) => {
+					// Create a DOM element
+					const component = document.createElement("oc-component");
+					component.setAttribute("href", config.componentHref);
+					component.setAttribute("data-rendered", "true");
+					component.innerHTML = "<div>previously rendered content</div>";
+					let renderByHrefCalls = 0;
+					// Mock renderByHref
+					oc.renderByHref = (href, cb) => {
+						renderByHrefCalls++;
+					};
+
+					// Call the function being tested
+					oc.renderNestedComponent(component, () => {
+						resolve({
+							innerHTML: component.innerHTML,
+							renderByHrefCalls: renderByHrefCalls,
+						});
+					});
+				});
+			},
+			{ componentHref },
+		);
+
+		// Verify the result
+		expect(result.innerHTML).toContain("previously rendered content");
+		expect(result.renderByHrefCalls).toBe(0);
+	});
+
+	test("should wait for a component that is already rendering", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(
+			(config) => {
+				return new Promise((resolve) => {
+					const component = document.createElement("oc-component");
+					component.setAttribute("href", config.componentHref);
+					component.setAttribute("data-rendering", "true");
+					document.body.appendChild(component);
+
+					let renderByHrefCalls = 0;
+					oc.renderByHref = (href, cb) => {
+						renderByHrefCalls++;
+						cb(null, {
+							html: "<div>this is the component content</div>",
+							version: "1.0.0",
+							name: "my-component",
+							key: "12345678901234567890",
+						});
+					};
+
+					// Call the function being tested
+					oc.renderNestedComponent(component, () => {
+						const data = {
+							finalHtml: component.innerHTML,
+							renderByHrefCalls: renderByHrefCalls,
+						};
+						component.remove();
+						resolve(data);
+					});
+
+					// a bit later, we simulate the end of the rendering
+					setTimeout(() => {
+						component.setAttribute("data-rendering", "false");
+						component.setAttribute("data-rendered", "true");
+						component.innerHTML = "<div>newly rendered content</div>";
+					}, 200);
+				});
+			},
+			{ componentHref },
+		);
+
+		// Verify the results
+		expect(result.finalHtml).toContain("newly rendered content");
+		expect(result.renderByHrefCalls).toBe(0);
+	});
 });
