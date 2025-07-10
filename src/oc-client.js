@@ -52,6 +52,9 @@ export function createOc(oc) {
 	let RETRY_SEND_NUMBER = ocConf.retrySendNumber || true;
 	let POLLING_INTERVAL = ocConf.pollingInterval || 500;
 	let OC_TAG = ocConf.tag || "oc-component";
+	let MANAGE_LIFECYCLES = isBool(ocConf.manageLifecycles)
+		? ocConf.manageLifecycles
+		: false;
 	let MESSAGES_ERRORS_HREF_MISSING = "Href parameter missing";
 	let MESSAGES_ERRORS_RETRY_FAILED =
 		"Failed to load % component " + RETRY_LIMIT + " times. Giving up";
@@ -662,6 +665,47 @@ export function createOc(oc) {
 	};
 	// render the components
 	loadAfterReady();
+
+	if (window.customElements) {
+		window.customElements.define(
+			OC_TAG,
+			class extends HTMLElement {
+				#connected = false;
+				#manageLifecycle = false;
+				constructor() {
+					super();
+					if (
+						MANAGE_LIFECYCLES ||
+						this.getAttribute("manage-lifecycle") == "true" ||
+						this.getAttribute("manage-lifecycle") == ""
+					) {
+						this.#manageLifecycle = true;
+					}
+				}
+
+				connectedCallback() {
+					this.#connected = true;
+					if (this.#manageLifecycle) {
+						oc.renderNestedComponent(this, () => {});
+					}
+				}
+
+				disconnectedCallback() {
+					if (this.#connected) {
+						this.#connected = false;
+						const shouldUnmount =
+							this.#manageLifecycle &&
+							this.unmount &&
+							this.getAttribute("data-rendered") == "true";
+						if (shouldUnmount) {
+							this.unmount();
+							this.removeAttribute("data-rendered");
+						}
+					}
+				}
+			},
+		);
+	}
 
 	return oc;
 }
