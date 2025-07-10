@@ -521,41 +521,48 @@ export function createOc(oc) {
 			let isRendering = dataRendering == "true";
 			let isRendered = dataRendered == "true";
 
-			if (!isRendering && !isRendered) {
-				logInfo(MESSAGES_RETRIEVING);
-				setAttribute(dataRenderingAttribute, true);
-				if (!DISABLE_LOADER) {
-					component.innerHTML =
-						'<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + "</div>";
-				}
-
-				oc.renderByHref(
-					{
-						href: getAttribute("href"),
-						id: getAttribute("id"),
-						element: component,
-					},
-					(err, data) => {
-						if (err || !data) {
-							setAttribute(dataRenderingAttribute, false);
-							setAttribute(dataRenderedAttribute, false);
-							setAttribute("data-failed", true);
-							component.innerHTML = "";
-							oc.events.fire("oc:failed", {
-								originalError: err,
-								data: data,
-								component,
-							});
-							logError(err);
-							callback();
-						} else {
-							processHtml(component, data, callback);
-						}
-					},
-				);
-			} else {
-				timeout(callback, POLLING_INTERVAL);
+			if (isRendered) {
+				callback();
+				return;
 			}
+			if (isRendering) {
+				timeout(() => {
+					oc.renderNestedComponent(component, callback);
+				}, POLLING_INTERVAL);
+				return;
+			}
+
+			logInfo(MESSAGES_RETRIEVING);
+			setAttribute(dataRenderingAttribute, true);
+			if (!DISABLE_LOADER) {
+				component.innerHTML =
+					'<div class="oc-loading">' + MESSAGES_LOADING_COMPONENT + "</div>";
+			}
+
+			oc.renderByHref(
+				{
+					href: getAttribute("href"),
+					id: getAttribute("id"),
+					element: component,
+				},
+				(err, data) => {
+					if (err || !data) {
+						setAttribute(dataRenderingAttribute, false);
+						setAttribute(dataRenderedAttribute, false);
+						setAttribute("data-failed", true);
+						component.innerHTML = "";
+						oc.events.fire("oc:failed", {
+							originalError: err,
+							data: data,
+							component,
+						});
+						logError(err);
+						callback();
+					} else {
+						processHtml(component, data, callback);
+					}
+				},
+			);
 		});
 	};
 
