@@ -679,20 +679,23 @@ export function createOc(oc) {
 			class extends HTMLElement {
 				#connected = false;
 				#manageLifecycle = !DISABLE_LIFECYCLES;
+				// biome-ignore lint/complexity/noUselessConstructor: <explanation>
 				constructor() {
 					super();
-					if (
-						this.getAttribute("disable-lifecycle") == "true" ||
-						this.getAttribute("disable-lifecycle") == ""
-					) {
-						this.#manageLifecycle = true;
-					} else if (this.getAttribute("disable-lifecycle") == "false") {
-						this.#manageLifecycle = false;
-					}
 				}
 
 				connectedCallback() {
 					this.#connected = true;
+
+					if (
+						this.getAttribute("disable-lifecycle") == "true" ||
+						this.getAttribute("disable-lifecycle") == ""
+					) {
+						this.#manageLifecycle = false;
+					} else if (this.getAttribute("disable-lifecycle") == "false") {
+						this.#manageLifecycle = true;
+					}
+
 					if (this.#manageLifecycle) {
 						oc.renderNestedComponent(this, () => {});
 					}
