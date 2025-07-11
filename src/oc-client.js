@@ -52,8 +52,8 @@ export function createOc(oc) {
 	let RETRY_SEND_NUMBER = ocConf.retrySendNumber || true;
 	let POLLING_INTERVAL = ocConf.pollingInterval || 500;
 	let OC_TAG = ocConf.tag || "oc-component";
-	let MANAGE_LIFECYCLES = isBool(ocConf.manageLifecycles)
-		? ocConf.manageLifecycles
+	let DISABLE_LIFECYCLES = isBool(ocConf.disableLifecycles)
+		? ocConf.disableLifecycles
 		: false;
 	let MESSAGES_ERRORS_HREF_MISSING = "Href parameter missing";
 	let MESSAGES_ERRORS_RETRY_FAILED =
@@ -678,15 +678,16 @@ export function createOc(oc) {
 			OC_TAG,
 			class extends HTMLElement {
 				#connected = false;
-				#manageLifecycle = false;
+				#manageLifecycle = !DISABLE_LIFECYCLES;
 				constructor() {
 					super();
 					if (
-						MANAGE_LIFECYCLES ||
-						this.getAttribute("manage-lifecycle") == "true" ||
-						this.getAttribute("manage-lifecycle") == ""
+						this.getAttribute("disable-lifecycle") == "true" ||
+						this.getAttribute("disable-lifecycle") == ""
 					) {
 						this.#manageLifecycle = true;
+					} else if (this.getAttribute("disable-lifecycle") == "false") {
+						this.#manageLifecycle = false;
 					}
 				}
 
