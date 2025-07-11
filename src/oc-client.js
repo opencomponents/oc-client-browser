@@ -704,6 +704,13 @@ export function createOc(oc) {
 				disconnectedCallback() {
 					if (this.#connected) {
 						this.#connected = false;
+						const id = this.getAttribute("id");
+						if (id) {
+							oc.events.fire("oc:unrendered", {
+								element: this,
+								id,
+							});
+						}
 						const shouldUnmount =
 							this.#manageLifecycle &&
 							this.unmount &&
