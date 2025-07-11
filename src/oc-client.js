@@ -52,6 +52,9 @@ export function createOc(oc) {
 	let RETRY_SEND_NUMBER = ocConf.retrySendNumber || true;
 	let POLLING_INTERVAL = ocConf.pollingInterval || 500;
 	let OC_TAG = ocConf.tag || "oc-component";
+	let DISABLE_LIFECYCLES = isBool(ocConf.disableLifecycles)
+		? ocConf.disableLifecycles
+		: false;
 	let MESSAGES_ERRORS_HREF_MISSING = "Href parameter missing";
 	let MESSAGES_ERRORS_RETRY_FAILED =
 		"Failed to load % component " + RETRY_LIMIT + " times. Giving up";
@@ -669,6 +672,51 @@ export function createOc(oc) {
 	};
 	// render the components
 	loadAfterReady();
+
+	if (window.customElements) {
+		window.customElements.define(
+			OC_TAG,
+			class extends HTMLElement {
+				#connected = false;
+				#manageLifecycle = !DISABLE_LIFECYCLES;
+				// biome-ignore lint/complexity/noUselessConstructor: <explanation>
+				constructor() {
+					super();
+				}
+
+				connectedCallback() {
+					this.#connected = true;
+
+					if (
+						this.getAttribute("disable-lifecycle") == "true" ||
+						this.getAttribute("disable-lifecycle") == ""
+					) {
+						this.#manageLifecycle = false;
+					} else if (this.getAttribute("disable-lifecycle") == "false") {
+						this.#manageLifecycle = true;
+					}
+
+					if (this.#manageLifecycle) {
+						oc.renderNestedComponent(this, () => {});
+					}
+				}
+
+				disconnectedCallback() {
+					if (this.#connected) {
+						this.#connected = false;
+						const shouldUnmount =
+							this.#manageLifecycle &&
+							this.unmount &&
+							this.getAttribute("data-rendered") == "true";
+						if (shouldUnmount) {
+							this.unmount();
+							this.removeAttribute("data-rendered");
+						}
+					}
+				}
+			},
+		);
+	}
 
 	return oc;
 }
