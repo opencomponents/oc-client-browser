@@ -1,6 +1,12 @@
 /* globals __CLIENT_VERSION__, __REGISTERED_TEMPLATES_PLACEHOLDER__, __DEFAULT_RETRY_INTERVAL__, __DEFAULT_RETRY_LIMIT__, __DEFAULT_DISABLE_LOADER__, __DISABLE_LEGACY_TEMPLATES__, __EXTERNALS__, __IMPORTS__ */
 import { decode } from "@rdevis/turbo-stream";
 
+function createErrorFromObject(o) {
+	const e = new Error(o.message || o);
+	if (o.stack) e.stack = o.stack;
+	return Object.assign(e, o.originalError, o);
+}
+
 export function createOc(oc) {
 	// If oc client is already inside the page, we do nothing.
 	if (oc.status) {
@@ -35,7 +41,6 @@ export function createOc(oc) {
 	let logError = (msg) => console.log(msg);
 	let logInfo = (msg) => ocConf.debug && console.log(msg);
 	let handleFetchResponse = (response) => {
-		if (!response.ok) throw response;
 		if (response.headers.get("Content-Type") !== "x-text/stream")
 			return response.json();
 
@@ -276,10 +281,15 @@ export function createOc(oc) {
 			.then((apiResponse) => {
 				if (!options.action) {
 					let response = apiResponse[0].response;
-					let err = response.error ? response.details || response.error : null;
+					let err = response.error
+						? createErrorFromObject(response.details || response.error)
+						: null;
 					cb(err, response.data, apiResponse[0]);
 				} else {
-					cb(null, apiResponse.data);
+					let err = apiResponse.error
+						? createErrorFromObject(apiResponse.details || apiResponse.error)
+						: null;
+					cb(err, apiResponse.data);
 				}
 			})
 			.catch(cb);
