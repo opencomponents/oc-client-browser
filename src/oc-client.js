@@ -35,7 +35,6 @@ export function createOc(oc) {
 	let logError = (msg) => console.log(msg);
 	let logInfo = (msg) => ocConf.debug && console.log(msg);
 	let handleFetchResponse = (response) => {
-		if (!response.ok) throw response;
 		if (response.headers.get("Content-Type") !== "x-text/stream")
 			return response.json();
 
