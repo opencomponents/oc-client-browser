@@ -200,7 +200,12 @@ test.describe("oc-client : getData", () => {
 		});
 
 		// Verify error was passed to callback
-		expect(errorResult.callbackError).toEqual("details about oups");
+		// If callbackError is an Error object, compare its message
+		const errorMsg =
+			errorResult.callbackError instanceof Error
+				? errorResult.callbackError.message
+				: errorResult.callbackError;
+		expect(errorMsg).toEqual("details about oups");
 	});
 
 	test("should call the callback with server.js error if no details are available", async ({
@@ -250,7 +255,11 @@ test.describe("oc-client : getData", () => {
 		});
 
 		// Verify error was passed to callback
-		expect(errorResult.callbackError).toEqual("oups");
+		const errorMsg =
+			errorResult.callbackError instanceof Error
+				? errorResult.callbackError.message
+				: errorResult.callbackError;
+		expect(errorMsg).toEqual("oups");
 	});
 
 	test("should handle JSON requests correctly", async ({ page }) => {
@@ -554,5 +563,53 @@ test.describe("oc-client : getData", () => {
 
 		// Verify error was passed to callback
 		expect(errorResult.callbackError).toEqual("Network error");
+	});
+
+	test("should reject with an Error object containing API error data when network returns 500", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(async () => {
+			// Save original fetch
+			const originalFetch = window.fetch;
+			// Mock fetch to simulate a 500 error with error object in response
+			window.fetch = () => {
+				return Promise.resolve({
+					headers: { get: () => null },
+					json: () =>
+						Promise.resolve({
+							error: "API error",
+							details: {
+								foo: "bar",
+								message: "Something went wrong",
+								stack: "stacktrace",
+							},
+						}),
+				});
+			};
+			try {
+				await window.oc.getAction({
+					component: "test-component",
+					baseUrl: "http://api",
+					version: "1.0.0",
+					action: "do",
+				});
+				return { success: true };
+			} catch (err) {
+				// Restore original fetch
+				window.fetch = originalFetch;
+				return {
+					success: false,
+					isError: err instanceof Error,
+					message: err.message,
+					stack: err.stack,
+					foo: err.foo,
+				};
+			}
+		});
+		expect(result.success).toBe(false);
+		expect(result.isError).toBe(true);
+		expect(result.message).toBe("Something went wrong");
+		expect(result.stack).toBe("stacktrace");
+		expect(result.foo).toBe("bar");
 	});
 });
