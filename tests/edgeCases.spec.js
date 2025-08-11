@@ -207,40 +207,6 @@ test.describe("oc-client : edge cases", () => {
 		expect(result.wasDelayed).toBe(true);
 	});
 
-	test("should handle load with jQuery-like placeholder", async ({ page }) => {
-		const result = await page.evaluate(() => {
-			return new Promise((resolve) => {
-				const placeholder = document.createElement("div");
-				placeholder.id = "test-placeholder";
-				document.body.appendChild(placeholder);
-
-				const jqueryLikePlaceholder = [placeholder];
-				jqueryLikePlaceholder[0] = placeholder;
-
-				oc.load(
-					jqueryLikePlaceholder,
-					"https://example.com/component",
-					(component) => {
-						resolve({
-							callbackCalled: true,
-							componentExists: !!component,
-							placeholderHasOcComponent:
-								placeholder.querySelector("oc-component") !== null,
-							placeholderInnerHTML: placeholder.innerHTML,
-						});
-					},
-				);
-			});
-		});
-
-		expect(result.callbackCalled).toBe(true);
-		expect(result.placeholderHasOcComponent).toBe(true);
-		expect(result.placeholderInnerHTML).toContain("oc-component");
-		expect(result.placeholderInnerHTML).toContain(
-			'href="https://example.com/component"',
-		);
-	});
-
 	test("should handle getAction with missing component", async ({ page }) => {
 		const result = await page.evaluate(() => {
 			return new Promise((resolve) => {

@@ -21,7 +21,7 @@
 	"files": ["tasks", "dist", "vendor", "src", "index.js", "index.d.ts"],
 	"scripts": {
 		"start": "serve -l 5173",
-		"test": "npm run build && npx playwright test",
+		"test": "npm run build && npx playwright test --reporter=html",
 		"build": "node tasks/build.js",
 		"lint": "npx @biomejs/biome check --write .",
 		"precommit": "lint-staged",
