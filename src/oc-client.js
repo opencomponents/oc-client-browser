@@ -457,7 +457,10 @@ export function createOc(oc) {
 			};
 
 			const { mount } = await import(data.component.src);
-			mount(data.element, data.component.props);
+			let context = {};
+			if (data.component.development)
+				context.development = data.component.development;
+			mount(data.element, data.component.props, context);
 			callback(null);
 		} catch (error) {
 			console.error("Error rendering ESM component", error);
