@@ -1,7 +1,7 @@
 type Callback<T> = (err: NodeJS.ErrnoException | null, data: T) => void;
 
 interface External {
-	global: string | string[];
+	global?: string | string[];
 	url: string;
 }
 interface ExtendedExternal extends External {
