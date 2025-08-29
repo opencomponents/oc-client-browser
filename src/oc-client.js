@@ -602,6 +602,10 @@ export function createOc(oc) {
 				)
 					.then(handleFetchResponse)
 					.then((apiResponse) => {
+						if (apiResponse.error) {
+							throw apiResponse;
+						}
+
 						let template = apiResponse.template;
 						apiResponse.data.id = ocId;
 						apiResponse.data.element = element;
@@ -631,6 +635,7 @@ export function createOc(oc) {
 							retries[href] = 0;
 						}
 						logError(MESSAGES_ERRORS_RETRIEVING);
+						window.oc.events.fire("oc:error", err);
 						retry(
 							href,
 							(requestNumber) => {
