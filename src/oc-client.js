@@ -723,7 +723,20 @@ export function createOc(oc) {
 					}
 
 					if (this.#manageLifecycle) {
-						oc.renderNestedComponent(this, () => {});
+						if (this.getAttribute("loading") === "lazy") {
+							const observer = new IntersectionObserver((entries) => {
+								for (const entry of entries) {
+									if (entry.isIntersecting) {
+										observer.disconnect();
+										oc.renderNestedComponent(this, () => {});
+										break;
+									}
+								}
+							});
+							observer.observe(this);
+						} else {
+							oc.renderNestedComponent(this, () => {});
+						}
 					}
 				}
 
