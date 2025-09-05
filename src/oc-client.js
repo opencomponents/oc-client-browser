@@ -723,7 +723,7 @@ export function createOc(oc) {
 					}
 
 					if (this.#manageLifecycle) {
-						if (this.getAttribute("lazy") === "true") {
+						if (this.getAttribute("loading") === "lazy") {
 							const observer = new IntersectionObserver((entries) => {
 								for (const entry of entries) {
 									if (entry.isIntersecting) {
