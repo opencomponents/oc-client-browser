@@ -301,4 +301,43 @@ test.describe("oc-client : security and script handling", () => {
 			}
 		}
 	});
+
+	test("should set nonce on re-animated script when cspNonce is provided", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(() => {
+			return new Promise((resolve) => {
+				oc.conf.cspNonce = "test-script-nonce";
+				const component = document.createElement("oc-component");
+				component.setAttribute("href", "//oc-registry.com/nonce-test/");
+				document.body.appendChild(component);
+
+				// Stub renderByHref to return HTML with a script that records its nonce
+				const originalRenderByHref = oc.renderByHref;
+				oc.renderByHref = (opts, cb) => {
+					cb(null, {
+						html: '<div>Content<script>window.nonceFromCurrentScript = document.currentScript && document.currentScript.getAttribute("nonce");</script></div>',
+						version: "1.0.0",
+						name: "nonce-test",
+						key: "nonce-key",
+					});
+				};
+
+				oc.renderNestedComponent(component, () => {
+					const script = component.querySelector("script");
+					const data = {
+						attrNonce: script?.getAttribute("nonce"),
+						currentScriptNonce: window.nonceFromCurrentScript,
+					};
+					// cleanup
+					oc.renderByHref = originalRenderByHref;
+					component.remove();
+					resolve(data);
+				});
+			});
+		});
+
+		expect(result.attrNonce).toBe("test-script-nonce");
+		expect(result.currentScriptNonce).toBe("test-script-nonce");
+	});
 });
