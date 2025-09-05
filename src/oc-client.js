@@ -38,6 +38,8 @@ export function createOc(oc) {
 	let renderedComponents = oc.renderedComponents;
 	let dataRenderedAttribute = "data-rendered";
 	let dataRenderingAttribute = "data-rendering";
+	let nonce = $document.currentScript?.nonce;
+
 	let logError = (msg) => console.log(msg);
 	let logInfo = (msg) => ocConf.debug && console.log(msg);
 	let handleFetchResponse = (response) => {
@@ -124,8 +126,8 @@ export function createOc(oc) {
 			for (let attribute of Array.from(script.attributes)) {
 				newScript.setAttribute(attribute.name, attribute.value);
 			}
-			if (ocConf.cspNonce) {
-				newScript.setAttribute("nonce", ocConf.cspNonce);
+			if (nonce) {
+				newScript.setAttribute("nonce", nonce);
 			}
 			script.parentNode?.replaceChild(newScript, script);
 		}
@@ -143,8 +145,8 @@ export function createOc(oc) {
 	oc.addStylesToHead = (styles) => {
 		let style = $document.createElement("style");
 		style.textContent = styles;
-		if (ocConf.cspNonce) {
-			style.setAttribute("nonce", ocConf.cspNonce);
+		if (nonce) {
+			style.setAttribute("nonce", nonce);
 		}
 		$document.head.appendChild(style);
 	};
