@@ -18,22 +18,4 @@ test.describe("oc-client : addStylesToHead", () => {
 		});
 		expect(style).toEqual("body: {background: red;}");
 	});
-
-	test("should set nonce on style tag when cspNonce is provided", async ({
-		page,
-	}) => {
-		const result = await page.evaluate(() => {
-			oc.conf.cspNonce = "test-style-nonce";
-			oc.addStylesToHead("body { color: black; }");
-			const styles = document.head.querySelectorAll("style");
-			const last = styles[styles.length - 1];
-			return {
-				nonce: last.getAttribute("nonce"),
-				content: last.textContent,
-			};
-		});
-
-		expect(result.nonce).toBe("test-style-nonce");
-		expect(result.content).toBe("body { color: black; }");
-	});
 });
