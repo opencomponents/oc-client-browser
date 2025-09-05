@@ -195,4 +195,133 @@ test.describe("oc-client : events", () => {
 		expect(result.eventObject).toEqual({ type: "null:event" });
 		expect(result.data).toBeNull();
 	});
+
+	test("should have debug configuration that defaults to false", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(() => {
+			return {
+				hasDebugProperty: "debug" in oc.conf,
+				debugDefaultValue: oc.conf.debug,
+				canSetDebug: (() => {
+					oc.conf.debug = true;
+					const canSet = oc.conf.debug === true;
+					oc.conf.debug = false;
+					return canSet;
+				})(),
+			};
+		});
+
+		expect(result.hasDebugProperty).toBe(false);
+		expect(result.debugDefaultValue).toBeUndefined();
+		expect(result.canSetDebug).toBe(true);
+	});
+
+	test("should log events when debug is enabled", async ({ page }) => {
+		const result = await page.evaluate(() => {
+			return new Promise((resolve) => {
+				const logCalls = [];
+				const originalConsoleLog = console.log;
+				console.log = (...args) => {
+					logCalls.push(args);
+				};
+
+				oc.conf.debug = true;
+
+				oc.events.fire("trace:test1", { message: "hello" });
+				oc.events.fire("trace:test2", { count: 42 });
+				oc.events.fire("trace:test3");
+
+				// Restore console.log
+				console.log = originalConsoleLog;
+
+				oc.conf.debug = false;
+
+				setTimeout(() => {
+					resolve({
+						logCallCount: logCalls.length,
+						logCalls: logCalls,
+					});
+				}, 10);
+			});
+		});
+
+		expect(result.logCallCount).toBe(3);
+
+		expect(result.logCalls[0][0]).toBe(
+			'OC event fired: "trace:test1" with data: {"message":"hello"}',
+		);
+
+		expect(result.logCalls[1][0]).toBe(
+			'OC event fired: "trace:test2" with data: {"count":42}',
+		);
+
+		expect(result.logCalls[2][0]).toBe('OC event fired: "trace:test3"');
+	});
+
+	test("should not log events when debug is disabled", async ({ page }) => {
+		const result = await page.evaluate(() => {
+			return new Promise((resolve) => {
+				const logCalls = [];
+				const originalConsoleLog = console.log;
+				console.log = (...args) => {
+					logCalls.push(args);
+				};
+
+				oc.conf.debug = false;
+
+				oc.events.fire("notrace:test1", { message: "hello" });
+				oc.events.fire("notrace:test2", { count: 42 });
+
+				// Restore console.log
+				console.log = originalConsoleLog;
+
+				setTimeout(() => {
+					resolve({
+						logCallCount: logCalls.length,
+						logCalls: logCalls,
+					});
+				}, 10);
+			});
+		});
+
+		expect(result.logCallCount).toBe(0);
+	});
+
+	test("should not interfere with normal event handling when debug is enabled", async ({
+		page,
+	}) => {
+		const result = await page.evaluate(() => {
+			return new Promise((resolve) => {
+				// Track event data
+				window.eventData = [];
+
+				// Set up event listener
+				oc.events.on("normal:event", (event, data) => {
+					window.eventData.push({
+						eventType: event.type,
+						data: data,
+					});
+				});
+
+				oc.conf.debug = true;
+
+				// Fire event
+				oc.events.fire("normal:event", { test: "data" });
+
+				oc.conf.debug = false;
+
+				setTimeout(() => {
+					resolve({
+						eventCount: window.eventData.length,
+						eventData: window.eventData[0],
+					});
+				}, 10);
+			});
+		});
+
+		expect(result.eventCount).toBe(1);
+		expect(result.eventData.eventType).toBe("normal:event");
+		expect(result.eventData.data).toEqual({ test: "data" });
+	});
 });
