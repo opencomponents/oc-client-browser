@@ -248,13 +248,9 @@ test.describe("oc-client : events", () => {
 
 		expect(result.logCallCount).toBe(3);
 
-		expect(result.logCalls[0][0]).toBe(
-			'OC event fired: "trace:test1" with data: {"message":"hello"}',
-		);
+		expect(result.logCalls[0][0]).toBe('OC event fired: "trace:test1"');
 
-		expect(result.logCalls[1][0]).toBe(
-			'OC event fired: "trace:test2" with data: {"count":42}',
-		);
+		expect(result.logCalls[1][0]).toBe('OC event fired: "trace:test2"');
 
 		expect(result.logCalls[2][0]).toBe('OC event fired: "trace:test3"');
 	});
