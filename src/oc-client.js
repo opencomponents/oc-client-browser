@@ -382,9 +382,7 @@ export function createOc(oc) {
 
 					return {
 						fire(key, data) {
-							logInfo(
-								`OC event fired: "${key}"${data ? ` with data: ${JSON.stringify(data)}` : ""}`,
-							);
+							logInfo(`OC event fired: "${key}"`);
 							if (listeners[key]) {
 								for (let cb of listeners[key]) {
 									cb({ type: key }, data);
