@@ -246,7 +246,7 @@ export function createOc(oc) {
 				renderedComponents[dataName].baseUrl = data.baseUrl;
 			}
 			data.element = component;
-			oc.events.fire("oc:rendered", data);
+			oc.events.fire("oc:rendered", { ...data, id: data.ocId });
 		}
 
 		callback();
