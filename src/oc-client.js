@@ -284,6 +284,7 @@ export function createOc(oc) {
 			method: "POST",
 			headers: headers,
 			body: JSON.stringify(data),
+			signal: options.signal,
 		})
 			.then(handleFetchResponse)
 			.then((apiResponse) => {
