@@ -1,10 +1,12 @@
 # oc-client-browser
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/opencomponents/oc-client-browser.svg)](https://greenkeeper.io/)
+# DEPRECATED
 
-The [OpenComponents](https://github.com/opentable/oc) browser client.
+This package has moved into the [oc monorepo](https://github.com/opencomponents/oc) under [`packages/oc-client-browser`](https://github.com/opencomponents/oc/tree/master/packages/oc-client-browser).
 
-### [Documentation](https://github.com/opentable/oc/wiki/Browser-client)
+All future development, issues, and pull requests should be directed there.
+
+---
 
 ### License
 MIT
